@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import javax.swing.Timer;
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -29,7 +30,7 @@ public class EmailClientGUI extends JFrame {
     private JList<String> emailList = new JList<>(emailListModel);
     private JTextArea emailContent = new JTextArea();
     private Message[] messages;
-
+    private int lastEmailCount = 0;
     public EmailClientGUI() {
         setTitle("Java Email Client");
         setSize(800, 600);
@@ -139,6 +140,8 @@ public class EmailClientGUI extends JFrame {
             try {
                 EmailSessionManager.getInstance(username, password);
                 refreshInbox();
+                lastEmailCount = EmailSessionManager.getInstance().getTotalEmailCount();
+                startEmailCheckTimer();
             } catch (MessagingException e) {
                 JOptionPane.showMessageDialog(this, "Failed to initialize email session: " + e.getMessage(),
                         "Login Error", JOptionPane.ERROR_MESSAGE);
@@ -284,7 +287,22 @@ public class EmailClientGUI extends JFrame {
         composeDialog.setLocationRelativeTo(this);
         composeDialog.setVisible(true);
     }
-
+    private void checkForNewEmails() {
+        try {
+            int currentEmailCount = EmailSessionManager.getInstance().getTotalEmailCount();
+            if (currentEmailCount > lastEmailCount) {
+                JOptionPane.showMessageDialog(this, "You have new emails!", "New Email", JOptionPane.INFORMATION_MESSAGE);
+                refreshInbox(); // Optionally refresh inbox
+                lastEmailCount = currentEmailCount; // 更新邮件总数
+            }
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+    private void startEmailCheckTimer() {
+        Timer timer = new Timer(1000, e -> checkForNewEmails()); // 每5分钟检查一次
+        timer.start();
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new EmailClientGUI());
     }
