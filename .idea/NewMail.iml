@@ -8,14 +8,14 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/surce" />
+          <root url="file://$MODULE_DIR$/source" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-        <jarDirectory url="file://$MODULE_DIR$/surce" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/source" recursive="false" />
       </library>
     </orderEntry>
   </component>
