@@ -11,8 +11,7 @@ import java.util.Arrays;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMultipart;
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.ComparisonTerm;
 import java.awt.event.WindowAdapter;
@@ -150,7 +149,21 @@ public class EmailClientGUI extends JFrame {
             System.out.println("Login cancelled.");
         }
     }
+    private void showHtmlContent(String html) {
+        JDialog htmlDialog = new JDialog(this, "HTML Content", true);
+        htmlDialog.setSize(600, 400);
+        htmlDialog.setLocationRelativeTo(this);
 
+        JEditorPane htmlPane = new JEditorPane();
+        htmlPane.setContentType("text/html");
+        htmlPane.setText(html);
+        htmlPane.setEditable(false);
+
+        JScrollPane scrollPane = new JScrollPane(htmlPane);
+        htmlDialog.add(scrollPane, BorderLayout.CENTER);
+
+        htmlDialog.setVisible(true);
+    }
     private void refreshInbox() {
         try {
             // Get the current date
@@ -200,8 +213,11 @@ public class EmailClientGUI extends JFrame {
                     return doc.text(); // 使用 Jsoup 解析 HTML 并返回纯文本
                 }
             }
+        } else if (message.isMimeType("text/html")) {
+            String html = (String) message.getContent();
+            showHtmlContent(html); // 使用 Jsoup 解析 HTML 并返回纯文本
         }
-        return "No readable content found.";
+        return "No readable content found." + message.getContentType();
     }
 
     private void prepareEmailAction(String actionType) {
