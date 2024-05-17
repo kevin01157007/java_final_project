@@ -14,7 +14,7 @@ public class OpenAIChat {
 //            String emailAsk = "你來自哪裡?";
             String apiKey = "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"; // 替換為你的 API 密鑰
             String prompt = "I am a college student studying in Taiwan";
-
+//
             // 手動構建 JSON 陣列
             String jsonMessages = "[" +
                     "{\"role\": \"system\", \"content\": \"" + "You are a college student studying in Taiwan now ， you need to answer the question and reply the email  as you are a Taiwannese student. " + "\"}," +
