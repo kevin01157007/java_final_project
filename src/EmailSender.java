@@ -2,7 +2,7 @@ import javax.mail.*;
 import javax.mail.internet.*;
 import java.util.Properties;
 import java.io.File;
-
+//
 public class EmailSender {
     public static void sendEmailWithAttachment(String to, String subject, String body, File[] attachments) {
         try {
