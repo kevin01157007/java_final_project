@@ -16,7 +16,7 @@ import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.ComparisonTerm;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import javax.mail.search.SearchTerm;
+import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
 import org.jsoup.Jsoup;
