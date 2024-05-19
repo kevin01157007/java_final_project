@@ -21,7 +21,10 @@ import java.util.Calendar;
 import java.util.Date;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import javax.swing.Timer;
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.Scene;
+import javafx.scene.web.WebView;
+import javafx.application.Platform;
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -153,17 +156,23 @@ public class EmailClientGUI extends JFrame {
         JDialog htmlDialog = new JDialog(this, "HTML Content", true);
         htmlDialog.setSize(600, 400);
         htmlDialog.setLocationRelativeTo(this);
-
-        JEditorPane htmlPane = new JEditorPane();
-        htmlPane.setContentType("text/html");
-        htmlPane.setText(html);
-        htmlPane.setEditable(false);
-
-        JScrollPane scrollPane = new JScrollPane(htmlPane);
-        htmlDialog.add(scrollPane, BorderLayout.CENTER);
-
+    
+        // 创建 JFXPanel 以容纳 JavaFX 组件
+        JFXPanel jfxPanel = new JFXPanel();
+        htmlDialog.add(jfxPanel, BorderLayout.CENTER);
+    
+        // 使用 Platform.runLater 来确保以下代码在 JavaFX 线程上执行
+        Platform.runLater(() -> {
+            WebView webView = new WebView();
+            webView.getEngine().loadContent(html);
+    
+            Scene scene = new Scene(webView);
+            jfxPanel.setScene(scene);
+        });
+    
         htmlDialog.setVisible(true);
     }
+    
     private void refreshInbox() {
         try {
             // Get the current date
