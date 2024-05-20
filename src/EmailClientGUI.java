@@ -25,6 +25,7 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
+import javax.mail.internet.*;
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -204,27 +205,56 @@ public class EmailClientGUI extends JFrame {
             }
         }
     }
-
+    public List<String> downloadAttachments(Part part, String saveDirectory) throws IOException, MessagingException {
+        List<String> downloadedAttachments = new ArrayList<>();
+        if (part.isMimeType("multipart/*")) {
+            Multipart multiPart = (Multipart) part.getContent();
+            int numberOfParts = multiPart.getCount();
+            for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                BodyPart bodyPart = multiPart.getBodyPart(partCount);
+                downloadedAttachments.addAll(downloadAttachments(bodyPart, saveDirectory));
+            }
+        } else if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+            String fileName = part.getFileName();
+            if (fileName != null) {
+                File saveFile = new File(saveDirectory, fileName);
+                ((MimeBodyPart) part).saveFile(saveFile);
+                downloadedAttachments.add(saveFile.getAbsolutePath());
+            }
+        }
+        if (!downloadedAttachments.isEmpty()) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(null, "附件已被下載到: " + saveDirectory,
+                                              "下載成功", JOptionPane.INFORMATION_MESSAGE);
+            });
+        }
+        return downloadedAttachments;
+    }
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
-        if (message.isMimeType("text/plain")) {
-            return (String) message.getContent();
-        } else if (message.isMimeType("multipart/*")) {
-            MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
+        return getTextFromPart(message);
+    }
+    
+    private String getTextFromPart(Part part) throws MessagingException, IOException {
+        if (part.isMimeType("text/plain")) {
+            return (String) part.getContent();
+        } else if (part.isMimeType("text/html")) {
+            String html = (String) part.getContent();
+            showHtmlContent(html);
+            return "HTML Content";
+        } else if (part.isMimeType("multipart/*")) {
+            MimeMultipart mimeMultipart = (MimeMultipart) part.getContent();
+            String result = "";
             for (int i = 0; i < mimeMultipart.getCount(); i++) {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-                if (bodyPart.isMimeType("text/plain")) {
-                    return (String) bodyPart.getContent();
-                }else if (bodyPart.isMimeType("text/html")) {
-                    String html = (String) bodyPart.getContent();
-                    Document doc = Jsoup.parse(html);
-                    return doc.text(); // 使用 Jsoup 解析 HTML 并返回纯文本
+                downloadAttachments(bodyPart,"../java_final_project/downloads");
+                String partText = getTextFromPart(bodyPart);
+                if (partText != null && !partText.isEmpty()) {
+                    result += partText + "\n";
                 }
             }
-        } else if (message.isMimeType("text/html")) {
-            String html = (String) message.getContent();
-            showHtmlContent(html); // 使用 Jsoup 解析 HTML 并返回纯文本
+            return result.trim();
         }
-        return "No readable content found." + message.getContentType();
+        return "";
     }
 
     private void prepareEmailAction(String actionType) {
