@@ -149,8 +149,9 @@ public class EmailClientGUI extends JFrame {
                 lastEmailCount = EmailSessionManager.getInstance().getTotalEmailCount();
                 startEmailCheckTimer();
             } catch (MessagingException e) {
-                JOptionPane.showMessageDialog(this, "Failed to initialize email session: " + e.getMessage(),
-                        "Login Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Failed to initialize email session: " +
+                                e.getMessage() + "\n請重新登入", "Login Error", JOptionPane.ERROR_MESSAGE);
+                showLoginDialog();
             }
         } else {
             System.out.println("Login cancelled.");
