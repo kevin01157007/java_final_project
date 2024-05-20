@@ -3,6 +3,8 @@ import javax.swing.event.ListSelectionEvent;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.FlowLayout;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.io.File;
 import java.util.List;
@@ -26,6 +28,7 @@ import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
 import javax.mail.internet.*;
+
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -66,19 +69,45 @@ public class EmailClientGUI extends JFrame {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setResizeWeight(0.5);
         splitPane.setOneTouchExpandable(true);
-
+        //設定主介面左邊區塊
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout());
+        leftPanel.setBackground(BACKGROUND_COLOR);
+        //設定信件清單
         emailList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         emailList.addListSelectionListener(this::emailListSelectionChanged);
         emailList.setFont(EMAIL_LIST_FONT);
         JScrollPane listScrollPane = new JScrollPane(emailList);
         listScrollPane.setBackground(BACKGROUND_COLOR);
-
+        leftPanel.add(emailList);
+        //設定搜尋欄
+        JTextField searchField = new JTextField("搜尋信件");
+        searchField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchField.getText().equals("搜尋信件")) {
+                    searchField.setText("");
+                    searchField.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchField.getText().isEmpty()) {
+                    searchField.setText("搜尋信件");
+                    searchField.setForeground(Color.GRAY);
+                }
+            }
+        });
+        searchField.setFont(EMAIL_CONTENT_FONT);
+        searchField.addActionListener(e -> searchEmail(searchField.getText()));
+        leftPanel.add(searchField, BorderLayout.NORTH);
+        //設定信件內容
         emailContent.setEditable(false);
         emailContent.setFont(EMAIL_CONTENT_FONT);
         JScrollPane contentScrollPane = new JScrollPane(emailContent);
         contentScrollPane.setBackground(BACKGROUND_COLOR);
 
-        splitPane.setLeftComponent(listScrollPane);
+        splitPane.setLeftComponent(leftPanel);
         splitPane.setRightComponent(contentScrollPane);
 
         getContentPane().setBackground(BACKGROUND_COLOR);
@@ -86,21 +115,26 @@ public class EmailClientGUI extends JFrame {
         JButton AIreplyButton = new JButton("AIReply");
         JButton replyButton = new JButton("Reply");
         JButton forwardButton = new JButton("Forward");
+        JButton deleteButton = new JButton("刪除郵件");
         AIreplyButton.setFont(BUTTON_FONT);
         replyButton.setFont(BUTTON_FONT);
         forwardButton.setFont(BUTTON_FONT);
+        deleteButton.setFont(BUTTON_FONT);
         AIreplyButton.setBackground(BUTTON_COLOR);
         replyButton.setBackground(BUTTON_COLOR);
         forwardButton.setBackground(BUTTON_COLOR);
+        deleteButton.setBackground(BUTTON_COLOR);
         AIreplyButton.addActionListener(e -> prepareEmailAction("AIReply"));
         replyButton.addActionListener(e -> prepareEmailAction("Reply"));
         forwardButton.addActionListener(e -> prepareEmailAction("Forward"));
+        deleteButton.addActionListener(e -> prepareEmailAction("Delete"));
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionPanel.setBackground(ACTION_PANEL_COLOR);
         actionPanel.add(AIreplyButton);
         actionPanel.add(replyButton);
         actionPanel.add(forwardButton);
+        actionPanel.add(deleteButton);
 
         add(actionPanel, BorderLayout.NORTH);
 
@@ -157,6 +191,7 @@ public class EmailClientGUI extends JFrame {
             System.out.println("Login cancelled.");
         }
     }
+
     private void showHtmlContent(String html) {
         JDialog htmlDialog = new JDialog(this, "HTML Content", true);
         htmlDialog.setSize(600, 400);
@@ -209,6 +244,7 @@ public class EmailClientGUI extends JFrame {
             }
         }
     }
+
     public List<String> downloadAttachments(Part part, String saveDirectory) throws IOException, MessagingException {
         List<String> downloadedAttachments = new ArrayList<>();
         if (part.isMimeType("multipart/*")) {
@@ -234,6 +270,7 @@ public class EmailClientGUI extends JFrame {
         }
         return downloadedAttachments;
     }
+
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
         return getTextFromPart(message);
     }
@@ -268,6 +305,9 @@ public class EmailClientGUI extends JFrame {
         }
         try {
             Message selectedMessage = messages[emailList.getSelectedIndex()];
+            if (actionType.equals("Delete")) {
+                //ToDo
+            }
             String to;
             if (actionType.equals("Reply")||actionType.equals("AIReply")) {
                 to = InternetAddress.toString(selectedMessage.getFrom());
@@ -295,8 +335,6 @@ public class EmailClientGUI extends JFrame {
                 }
 
             }else showComposeDialog(to, subject, body);
-
-
 
         } catch (MessagingException | IOException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -368,6 +406,7 @@ public class EmailClientGUI extends JFrame {
         composeDialog.setLocationRelativeTo(this);
         composeDialog.setVisible(true);
     }
+
     private void checkForNewEmails() {
         try {
             int currentEmailCount = EmailSessionManager.getInstance().getTotalEmailCount();
@@ -380,10 +419,16 @@ public class EmailClientGUI extends JFrame {
             e.printStackTrace();
         }
     }
+
     private void startEmailCheckTimer() {
         Timer timer = new Timer(1000, e -> checkForNewEmails()); // 每5分钟检查一次
         timer.start();
     }
+
+    private void searchEmail(String searchTerm) {
+        //ToDo
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new EmailClientGUI());
     }
