@@ -83,19 +83,22 @@ public class EmailClientGUI extends JFrame {
 
         getContentPane().setBackground(BACKGROUND_COLOR);
         getContentPane().add(splitPane, BorderLayout.CENTER);
-
+        JButton AIreplyButton = new JButton("AIReply");
         JButton replyButton = new JButton("Reply");
         JButton forwardButton = new JButton("Forward");
+        AIreplyButton.setFont(BUTTON_FONT);
         replyButton.setFont(BUTTON_FONT);
         forwardButton.setFont(BUTTON_FONT);
+        AIreplyButton.setBackground(BUTTON_COLOR);
         replyButton.setBackground(BUTTON_COLOR);
         forwardButton.setBackground(BUTTON_COLOR);
-
+        AIreplyButton.addActionListener(e -> prepareEmailAction("AIReply"));
         replyButton.addActionListener(e -> prepareEmailAction("Reply"));
         forwardButton.addActionListener(e -> prepareEmailAction("Forward"));
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionPanel.setBackground(ACTION_PANEL_COLOR);
+        actionPanel.add(AIreplyButton);
         actionPanel.add(replyButton);
         actionPanel.add(forwardButton);
 
@@ -264,12 +267,36 @@ public class EmailClientGUI extends JFrame {
         }
         try {
             Message selectedMessage = messages[emailList.getSelectedIndex()];
-            String to = actionType.equals("Reply") ? InternetAddress.toString(selectedMessage.getFrom()) : "";
-            String subjectPrefix = actionType.equals("Reply") ? "Re: " : "Fwd: ";
+            String to;
+            if (actionType.equals("Reply")||actionType.equals("AIReply")) {
+                to = InternetAddress.toString(selectedMessage.getFrom());
+            } else {
+                to = "";
+            }
+            String subjectPrefix;
+            if (actionType.equals("Reply")||actionType.equals("AIReply")) {
+                subjectPrefix = "Re: ";
+            } else {
+                subjectPrefix = "Fwd: ";
+            }
             String subject = subjectPrefix + selectedMessage.getSubject();
             String body = getTextFromMessage(selectedMessage);
+            if(actionType.equals("AIReply")){
+                try {
+                    // 调用 OpenAIChat 类的静态方法，并获取返回值
+                    String messageContent = getTextFromMessage(selectedMessage);
+                    String responseBody = OpenAIChat.sendOpenAIRequest(messageContent);
+                    showComposeDialog(to, subject, responseBody);
+                    // responseBody 就是 OpenAI 的回复内容，可以根据需要进行后续操作
+                    // 这里可以继续处理 responseBody 或者其他操作
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-            showComposeDialog(to, subject, body);
+            }else showComposeDialog(to, subject, body);
+
+
+
         } catch (MessagingException | IOException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.", "Error", JOptionPane.ERROR_MESSAGE);
         }
