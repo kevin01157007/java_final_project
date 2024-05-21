@@ -79,7 +79,7 @@ public class EmailClientGUI extends JFrame {
         emailList.setFont(EMAIL_LIST_FONT);
         JScrollPane listScrollPane = new JScrollPane(emailList);
         listScrollPane.setBackground(BACKGROUND_COLOR);
-        leftPanel.add(emailList);
+        leftPanel.add(new JScrollPane(emailList));
         //設定搜尋欄
         JTextField searchField = new JTextField("搜尋信件");
         searchField.addFocusListener(new FocusListener() {
