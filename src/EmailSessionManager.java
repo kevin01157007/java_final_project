@@ -1,5 +1,7 @@
 import javax.mail.*;
+import javax.mail.internet.InternetAddress;
 import javax.mail.search.SearchTerm;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class EmailSessionManager {
@@ -69,6 +71,24 @@ public class EmailSessionManager {
             emailFolder.open(Folder.READ_ONLY);
         }
         return emailFolder.search(searchTerm);
+    }
+
+    public Message[] searchUser(Message[] messages, String username) throws MessagingException {
+//        if (emailFolder == null || !emailFolder.isOpen()) {
+//            emailFolder = store.getFolder("INBOX");
+//            emailFolder.open(Folder.READ_ONLY);
+//        }
+//        messages = emailFolder.getMessages();
+        ArrayList<Message> searchedMessages = new ArrayList<Message>();
+        int idx = 0;
+        for (int i = 0; i < messages.length; i++) {
+            InternetAddress internetAddress = (InternetAddress) messages[i].getFrom()[0];
+            String personal = internetAddress.getPersonal();
+            if (personal != null && personal.toLowerCase().contains(username.toLowerCase()))
+                searchedMessages.add(messages[i]);
+        }
+        System.out.println(idx++);
+        return searchedMessages.toArray(new Message[0]);
     }
 
     public void deleteEmail(Message message) throws MessagingException {

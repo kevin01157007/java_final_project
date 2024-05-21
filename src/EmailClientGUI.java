@@ -21,8 +21,7 @@ import java.awt.event.WindowEvent;
 import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
@@ -80,27 +79,38 @@ public class EmailClientGUI extends JFrame {
         JScrollPane listScrollPane = new JScrollPane(emailList);
         listScrollPane.setBackground(BACKGROUND_COLOR);
         leftPanel.add(new JScrollPane(emailList));
-        //設定搜尋欄
-        JTextField searchField = new JTextField("搜尋信件");
-        searchField.addFocusListener(new FocusListener() {
+        //設定標題搜尋欄
+        JTextField searchSubjectField = new JTextField("搜尋寄件者");
+        searchSubjectField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (searchField.getText().equals("搜尋信件")) {
-                    searchField.setText("");
-                    searchField.setForeground(Color.BLACK);
+                if (searchSubjectField.getText().equals("搜尋寄件者")) {
+                    searchSubjectField.setText("");
+                    searchSubjectField.setForeground(Color.BLACK);
                 }
             }
             @Override
             public void focusLost(FocusEvent e) {
-                if (searchField.getText().isEmpty()) {
-                    searchField.setText("搜尋信件");
-                    searchField.setForeground(Color.GRAY);
+                if (searchSubjectField.getText().isEmpty()) {
+                    searchSubjectField.setText("搜尋寄件者");
+                    searchSubjectField.setForeground(Color.GRAY);
                 }
             }
         });
-        searchField.setFont(EMAIL_CONTENT_FONT);
-        searchField.addActionListener(e -> searchEmail(searchField.getText()));
-        leftPanel.add(searchField, BorderLayout.NORTH);
+        searchSubjectField.setFont(EMAIL_CONTENT_FONT);
+        searchSubjectField.addActionListener(e -> {
+            try {
+                Message[] searchedMessage = EmailSessionManager.getInstance().searchUser(messages, searchSubjectField.getText());
+                messages = searchedMessage;
+                System.out.println(Arrays.toString(messages));
+                emailListModel.clear();
+                for (int i = messages.length-1; i >= 0; i--) {
+                    emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
+                }
+            }catch (MessagingException ex) {ex.printStackTrace();}
+        });
+        leftPanel.add(searchSubjectField, BorderLayout.NORTH);
+
         //設定信件內容
         Platform.runLater(() -> {
             WebView webView = new WebView();
@@ -211,8 +221,8 @@ public class EmailClientGUI extends JFrame {
 
             messages = EmailSessionManager.getInstance().searchEmail(searchTerm);
             emailListModel.clear();
-            for (Message message : messages) {
-                emailListModel.addElement(message.getSubject() + " - From: " + InternetAddress.toString(message.getFrom()));
+            for (int i = messages.length-1; i >= 0; i--) {
+                emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
             }
         } catch (MessagingException e) {
             JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -423,10 +433,6 @@ public class EmailClientGUI extends JFrame {
     private void startEmailCheckTimer() {
         Timer timer = new Timer(1000, e -> checkForNewEmails()); // 每5分钟检查一次
         timer.start();
-    }
-
-    private void searchEmail(String keyWord) {
-        //ToDo
     }
 
     public static void main(String[] args) {
