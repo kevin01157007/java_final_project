@@ -297,8 +297,13 @@ public class EmailClientGUI extends JFrame {
         try {
             Message selectedMessage = messages[emailList.getSelectedIndex()];
             if (actionType.equals("Delete")) {
-                //ToDo
+                EmailSessionManager.getInstance().deleteEmail(selectedMessage);
+                refreshInbox();
+                Platform.runLater(() -> emailContent.setScene(new Scene(new WebView()))
+                );
+                return;
             }
+
             String to;
             if (actionType.equals("Reply")||actionType.equals("AIReply")) {
                 to = InternetAddress.toString(selectedMessage.getFrom());
@@ -328,7 +333,7 @@ public class EmailClientGUI extends JFrame {
             }else showComposeDialog(to, subject, body);
 
         } catch (MessagingException | IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error preparing email action.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -416,7 +421,7 @@ public class EmailClientGUI extends JFrame {
         timer.start();
     }
 
-    private void searchEmail(String searchTerm) {
+    private void searchEmail(String keyWord) {
         //ToDo
     }
 
