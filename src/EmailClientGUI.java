@@ -34,7 +34,7 @@ public class EmailClientGUI extends JFrame {
     private JPasswordField passwordField = new JPasswordField();
     private DefaultListModel<String> emailListModel = new DefaultListModel<>();
     private JList<String> emailList = new JList<>(emailListModel);
-    private JTextArea emailContent = new JTextArea();
+    private JFXPanel emailContent = new JFXPanel();
     private Message[] messages;
     private int lastEmailCount = 0;
     public EmailClientGUI() {
@@ -79,7 +79,7 @@ public class EmailClientGUI extends JFrame {
         emailList.setFont(EMAIL_LIST_FONT);
         JScrollPane listScrollPane = new JScrollPane(emailList);
         listScrollPane.setBackground(BACKGROUND_COLOR);
-        leftPanel.add(emailList);
+        leftPanel.add(new JScrollPane(emailList));
         //設定搜尋欄
         JTextField searchField = new JTextField("搜尋信件");
         searchField.addFocusListener(new FocusListener() {
@@ -102,13 +102,13 @@ public class EmailClientGUI extends JFrame {
         searchField.addActionListener(e -> searchEmail(searchField.getText()));
         leftPanel.add(searchField, BorderLayout.NORTH);
         //設定信件內容
-        emailContent.setEditable(false);
-        emailContent.setFont(EMAIL_CONTENT_FONT);
-        JScrollPane contentScrollPane = new JScrollPane(emailContent);
-        contentScrollPane.setBackground(BACKGROUND_COLOR);
-
+        Platform.runLater(() -> {
+            WebView webView = new WebView();
+            emailContent.setScene(new Scene(webView));
+        });
+        emailContent.setBackground(BACKGROUND_COLOR);
         splitPane.setLeftComponent(leftPanel);
-        splitPane.setRightComponent(contentScrollPane);
+        splitPane.setRightComponent(emailContent);
 
         getContentPane().setBackground(BACKGROUND_COLOR);
         getContentPane().add(splitPane, BorderLayout.CENTER);
@@ -193,22 +193,10 @@ public class EmailClientGUI extends JFrame {
     }
 
     private void showHtmlContent(String html) {
-        JDialog htmlDialog = new JDialog(this, "HTML Content", true);
-        htmlDialog.setSize(600, 400);
-        htmlDialog.setLocationRelativeTo(this);
-
-        JFXPanel jfxPanel = new JFXPanel();
-        htmlDialog.add(jfxPanel, BorderLayout.CENTER);
-        
         Platform.runLater(() -> {
-            WebView webView = new WebView();
+            WebView webView = (WebView) emailContent.getScene().getRoot();
             webView.getEngine().loadContent(html);
-    
-            Scene scene = new Scene(webView);
-            jfxPanel.setScene(scene);
         });
-    
-        htmlDialog.setVisible(true);
     }
     
     private void refreshInbox() {
@@ -235,18 +223,22 @@ public class EmailClientGUI extends JFrame {
         if (!e.getValueIsAdjusting() && emailList.getSelectedIndex() != -1) {
             try {
                 Message selectedMessage = messages[emailList.getSelectedIndex()];
-                emailContent.setText("");
-                emailContent.append("Subject: " + selectedMessage.getSubject() + "\n\n");
-                emailContent.append("From: " + InternetAddress.toString(selectedMessage.getFrom()) + "\n\n");
-                emailContent.append(getTextFromMessage(selectedMessage));
+                String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
+                content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
+                content += getTextFromMessage(selectedMessage);
+                showHtmlContent(content);
             } catch (MessagingException | IOException ex) {
-                emailContent.setText("Error reading email content: " + ex.getMessage());
+                showHtmlContent("Error reading email content: " + ex.getMessage());
             }
         }
     }
 
     public List<String> downloadAttachments(Part part, String saveDirectory) throws IOException, MessagingException {
         List<String> downloadedAttachments = new ArrayList<>();
+        File directory = new File(saveDirectory);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
         if (part.isMimeType("multipart/*")) {
             Multipart multiPart = (Multipart) part.getContent();
             int numberOfParts = multiPart.getCount();
@@ -271,17 +263,20 @@ public class EmailClientGUI extends JFrame {
         return downloadedAttachments;
     }
 
+    private String convertPlainTextToHtml(String text) {
+        String html = text.replace("\n", "<br>");
+        return "<html><body>" + html + "</body></html>";
+    }
+
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
         return getTextFromPart(message);
     }
     
     private String getTextFromPart(Part part) throws MessagingException, IOException {
         if (part.isMimeType("text/plain")) {
-            return (String) part.getContent();
+            return convertPlainTextToHtml((String) part.getContent());
         } else if (part.isMimeType("text/html")) {
-            String html = (String) part.getContent();
-            showHtmlContent(html);
-            return "HTML Content";
+            return (String) part.getContent(); 
         } else if (part.isMimeType("multipart/*")) {
             MimeMultipart mimeMultipart = (MimeMultipart) part.getContent();
             String result = "";
@@ -306,8 +301,13 @@ public class EmailClientGUI extends JFrame {
         try {
             Message selectedMessage = messages[emailList.getSelectedIndex()];
             if (actionType.equals("Delete")) {
-                //ToDo
+                EmailSessionManager.getInstance().deleteEmail(selectedMessage);
+                refreshInbox();
+                Platform.runLater(() -> emailContent.setScene(new Scene(new WebView()))
+                );
+                return;
             }
+
             String to;
             if (actionType.equals("Reply")||actionType.equals("AIReply")) {
                 to = InternetAddress.toString(selectedMessage.getFrom());
@@ -337,7 +337,7 @@ public class EmailClientGUI extends JFrame {
             }else showComposeDialog(to, subject, body);
 
         } catch (MessagingException | IOException ex) {
-            JOptionPane.showMessageDialog(this, "Error preparing email action.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -425,7 +425,7 @@ public class EmailClientGUI extends JFrame {
         timer.start();
     }
 
-    private void searchEmail(String searchTerm) {
+    private void searchEmail(String keyWord) {
         //ToDo
     }
 

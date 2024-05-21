@@ -46,6 +46,7 @@ public class EmailSessionManager {
     public static String getPassword() {
         return currentPassword;
     }
+
     public int getTotalEmailCount() throws MessagingException {
         if (emailFolder == null || !emailFolder.isOpen()) {
             emailFolder = store.getFolder("INBOX");
@@ -53,6 +54,7 @@ public class EmailSessionManager {
         }
         return emailFolder.getMessageCount();
     }
+
     public Message[] receiveEmail() throws MessagingException {
         if (emailFolder == null || !emailFolder.isOpen()) {
             emailFolder = store.getFolder("INBOX");
@@ -67,6 +69,19 @@ public class EmailSessionManager {
             emailFolder.open(Folder.READ_ONLY);
         }
         return emailFolder.search(searchTerm);
+    }
+
+    public void deleteEmail(Message message) throws MessagingException {
+        if (emailFolder == null || !emailFolder.isOpen()) {
+            emailFolder = store.getFolder("INBOX");
+            emailFolder.open(Folder.READ_WRITE);
+        } else if (emailFolder.getMode() != Folder.READ_WRITE) {
+            emailFolder.close(false);
+            emailFolder.open(Folder.READ_WRITE);
+        }
+
+        message.setFlag(Flags.Flag.DELETED, true);
+        emailFolder.expunge();
     }
 
     public void close() throws MessagingException {
