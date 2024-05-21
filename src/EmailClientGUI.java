@@ -21,11 +21,13 @@ import java.awt.event.WindowEvent;
 import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
-
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
+import src.AIAnalyze;
 import javax.mail.internet.*;
 
 public class EmailClientGUI extends JFrame {
@@ -122,18 +124,22 @@ public class EmailClientGUI extends JFrame {
 
         getContentPane().setBackground(BACKGROUND_COLOR);
         getContentPane().add(splitPane, BorderLayout.CENTER);
+        JButton AIAnalyzeButton = new JButton("AIAnalyze");
         JButton AIreplyButton = new JButton("AIReply");
         JButton replyButton = new JButton("Reply");
         JButton forwardButton = new JButton("Forward");
         JButton deleteButton = new JButton("刪除郵件");
+        AIAnalyzeButton.setFont(BUTTON_FONT);
         AIreplyButton.setFont(BUTTON_FONT);
         replyButton.setFont(BUTTON_FONT);
         forwardButton.setFont(BUTTON_FONT);
         deleteButton.setFont(BUTTON_FONT);
+        AIAnalyzeButton.setBackground(BUTTON_COLOR);
         AIreplyButton.setBackground(BUTTON_COLOR);
         replyButton.setBackground(BUTTON_COLOR);
         forwardButton.setBackground(BUTTON_COLOR);
         deleteButton.setBackground(BUTTON_COLOR);
+        AIAnalyzeButton.addActionListener(e -> prepareEmailAction("AIAnalyze"));
         AIreplyButton.addActionListener(e -> prepareEmailAction("AIReply"));
         replyButton.addActionListener(e -> prepareEmailAction("Reply"));
         forwardButton.addActionListener(e -> prepareEmailAction("Forward"));
@@ -141,6 +147,7 @@ public class EmailClientGUI extends JFrame {
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionPanel.setBackground(ACTION_PANEL_COLOR);
+        actionPanel.add(AIAnalyzeButton);
         actionPanel.add(AIreplyButton);
         actionPanel.add(replyButton);
         actionPanel.add(forwardButton);
@@ -317,8 +324,17 @@ public class EmailClientGUI extends JFrame {
                 );
                 return;
             }
-
-            String to;
+            if (actionType.equals("AIAnalyze")){
+                try{
+                    String messageContent = getTextFromMessage(selectedMessage);
+                    String responseBody = AIAnalyze.OpenAIAnalyze(messageContent);
+                    showanaly(responseBody);
+                    return;
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+                String to;
             if (actionType.equals("Reply")||actionType.equals("AIReply")) {
                 to = InternetAddress.toString(selectedMessage.getFrom());
             } else {
@@ -334,23 +350,34 @@ public class EmailClientGUI extends JFrame {
             String body = getTextFromMessage(selectedMessage);
             if(actionType.equals("AIReply")){
                 try {
-                    // 调用 OpenAIChat 类的静态方法，并获取返回值
-                    String messageContent = getTextFromMessage(selectedMessage);
-                    String responseBody = OpenAIChat.sendOpenAIRequest(messageContent);
+                    String responseBody = OpenAIChat.sendOpenAIRequest(body);
                     showComposeDialog(to, subject, responseBody);
-                    // responseBody 就是 OpenAI 的回复内容，可以根据需要进行后续操作
-                    // 这里可以继续处理 responseBody 或者其他操作
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-            }else showComposeDialog(to, subject, body);
+            }else {showComposeDialog(to, subject, body);
+            }
 
         } catch (MessagingException | IOException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    public static void showanaly(String message) {
+        // 創建 JDialog
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Analyze");
+        dialog.setSize(300, 200);
+        dialog.setLocationRelativeTo(null); // 使對話框居中顯示
+        // 創建 JLabel 並添加到對話框
+        JLabel label = new JLabel(message);
+        label.setHorizontalAlignment(SwingConstants.CENTER); // 文字置中
+        dialog.add(label);
 
+        // 設定對話框可見
+        dialog.setVisible(true);
+    }
     private void showComposeDialog(String to, String subject, String body) {
         JDialog composeDialog = new JDialog(this, "Compose Email", true);
         composeDialog.setLayout(new BorderLayout(5, 5));
