@@ -235,6 +235,10 @@ public class EmailClientGUI extends JFrame {
 
     public List<String> downloadAttachments(Part part, String saveDirectory) throws IOException, MessagingException {
         List<String> downloadedAttachments = new ArrayList<>();
+        File directory = new File(saveDirectory);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
         if (part.isMimeType("multipart/*")) {
             Multipart multiPart = (Multipart) part.getContent();
             int numberOfParts = multiPart.getCount();
