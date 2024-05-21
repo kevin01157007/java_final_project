@@ -340,12 +340,9 @@ public class EmailClientGUI extends JFrame {
             String body = getTextFromMessage(selectedMessage);
             if(actionType.equals("AIReply")){
                 try {
-                    // 调用 OpenAIChat 类的静态方法，并获取返回值
-                    String messageContent = getTextFromMessage(selectedMessage);
-                    String responseBody = OpenAIChat.sendOpenAIRequest(messageContent);
+                    String responseBody = OpenAIChat.sendOpenAIRequest(body);
                     showComposeDialog(to, subject, responseBody);
-                    // responseBody 就是 OpenAI 的回复内容，可以根据需要进行后续操作
-                    // 这里可以继续处理 responseBody 或者其他操作
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
