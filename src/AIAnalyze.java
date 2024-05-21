@@ -15,7 +15,8 @@ public class AIAnalyze {
         try {
             String apiKey = "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"; // 替換為你的 API 密鑰
             // 手動構建 JSON 陣列
-            String messageWithoutNewlines = message.replaceAll("\\n", "");
+            String escapedMessage = escapeHtml(message);
+            String messageWithoutNewlines = escapedMessage.replaceAll("\\n", "");
             String jsonMessages = "[" +
                     "{\"role\": \"system\", \"content\": \"" + "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with chinese.Please ensure that each line in the message does not exceed 30 characters in English. " + "\"}," +
                     "{\"role\": \"user\", \"content\": \"" +messageWithoutNewlines+ "\"}" +
@@ -61,5 +62,14 @@ public class AIAnalyze {
             e.printStackTrace();
         }
         return null;
+    }
+    private static String escapeHtml(String html) {
+        return html.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f");
     }
 }

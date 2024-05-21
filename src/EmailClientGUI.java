@@ -347,7 +347,8 @@ public class EmailClientGUI extends JFrame {
                     e.printStackTrace();
                 }
 
-            }else showComposeDialog(to, subject, body);
+            }else {showComposeDialog(to, subject, body);
+            }
 
         } catch (MessagingException | IOException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
