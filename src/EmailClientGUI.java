@@ -318,7 +318,7 @@ public class EmailClientGUI extends JFrame {
                 try{
                     String messageContent = getTextFromMessage(selectedMessage);
                     String responseBody = AIAnalyze.OpenAIAnalyze(messageContent);
-                    JOptionPane.showMessageDialog(this,responseBody,"Analyze",JOptionPane.INFORMATION_MESSAGE);
+                    showanaly(responseBody);
                     return;
                 }catch (Exception e) {
                     e.printStackTrace();
@@ -356,7 +356,20 @@ public class EmailClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    public static void showanaly(String message) {
+        // 創建 JDialog
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Analyze");
+        dialog.setSize(300, 200);
+        dialog.setLocationRelativeTo(null); // 使對話框居中顯示
+        // 創建 JLabel 並添加到對話框
+        JLabel label = new JLabel(message);
+        label.setHorizontalAlignment(SwingConstants.CENTER); // 文字置中
+        dialog.add(label);
 
+        // 設定對話框可見
+        dialog.setVisible(true);
+    }
     private void showComposeDialog(String to, String subject, String body) {
         JDialog composeDialog = new JDialog(this, "Compose Email", true);
         composeDialog.setLayout(new BorderLayout(5, 5));
