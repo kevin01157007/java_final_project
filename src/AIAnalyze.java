@@ -11,7 +11,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class AIAnalyze {
-    public static void main(String[] args) {
+    public static String OpenAIAnalyze(String message) throws Exception {
         try {
             String apiKey = "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"; // 替換為你的 API 密鑰
             // 手動構建 JSON 陣列
@@ -50,7 +50,8 @@ public class AIAnalyze {
                 String content = firstChoice.getJSONObject("message").getString("content");
 
                 // 輸出 content 欄位的值
-                System.out.println(content);
+
+                return content;
             }
 
             // 關閉 HTTP 客戶端
@@ -58,5 +59,6 @@ public class AIAnalyze {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 }

@@ -27,6 +27,8 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
+import src.AIAnalyze;
+
 import javax.mail.internet.*;
 
 public class EmailClientGUI extends JFrame {
@@ -112,18 +114,22 @@ public class EmailClientGUI extends JFrame {
 
         getContentPane().setBackground(BACKGROUND_COLOR);
         getContentPane().add(splitPane, BorderLayout.CENTER);
+        JButton AIAnalyzeButton = new JButton("AIAnalyze");
         JButton AIreplyButton = new JButton("AIReply");
         JButton replyButton = new JButton("Reply");
         JButton forwardButton = new JButton("Forward");
         JButton deleteButton = new JButton("刪除郵件");
+        AIAnalyzeButton.setFont(BUTTON_FONT);
         AIreplyButton.setFont(BUTTON_FONT);
         replyButton.setFont(BUTTON_FONT);
         forwardButton.setFont(BUTTON_FONT);
         deleteButton.setFont(BUTTON_FONT);
+        AIAnalyzeButton.setBackground(BUTTON_COLOR);
         AIreplyButton.setBackground(BUTTON_COLOR);
         replyButton.setBackground(BUTTON_COLOR);
         forwardButton.setBackground(BUTTON_COLOR);
         deleteButton.setBackground(BUTTON_COLOR);
+        AIAnalyzeButton.addActionListener(e -> prepareEmailAction("AIAnalyze"));
         AIreplyButton.addActionListener(e -> prepareEmailAction("AIReply"));
         replyButton.addActionListener(e -> prepareEmailAction("Reply"));
         forwardButton.addActionListener(e -> prepareEmailAction("Forward"));
@@ -131,6 +137,7 @@ public class EmailClientGUI extends JFrame {
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionPanel.setBackground(ACTION_PANEL_COLOR);
+        actionPanel.add(AIAnalyzeButton);
         actionPanel.add(AIreplyButton);
         actionPanel.add(replyButton);
         actionPanel.add(forwardButton);
@@ -307,8 +314,17 @@ public class EmailClientGUI extends JFrame {
                 );
                 return;
             }
-
-            String to;
+            if (actionType.equals("AIAnalyze")){
+                try{
+                    String messageContent = getTextFromMessage(selectedMessage);
+                    String responseBody = AIAnalyze.OpenAIAnalyze(messageContent);
+                    JOptionPane.showMessageDialog(this,responseBody,"Analyze",JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+                String to;
             if (actionType.equals("Reply")||actionType.equals("AIReply")) {
                 to = InternetAddress.toString(selectedMessage.getFrom());
             } else {
@@ -428,6 +444,7 @@ public class EmailClientGUI extends JFrame {
     private void searchEmail(String keyWord) {
         //ToDo
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new EmailClientGUI());
