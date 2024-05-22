@@ -29,7 +29,7 @@ public class AIAnalyze {
             httpPost.setHeader("Content-Type", "application/json");
 
             // 設置請求主體（這裡假設郵件內容已經轉換成 JSON 格式）
-            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-3.5-turbo\"}");
+            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}");
             httpPost.setEntity(requestEntity);
 
             // 執行請求並獲取回應
