@@ -211,10 +211,6 @@ public class EmailClientGUI extends JFrame {
         } else {
 //            System.out.println("Login cancelled.");
             JOptionPane.showMessageDialog(null, "Login cancelled." ,"information",JOptionPane.INFORMATION_MESSAGE);
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            } catch (Exception e) {
-            }
             System.exit(0);
         }
     }
