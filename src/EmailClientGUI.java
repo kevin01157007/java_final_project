@@ -281,12 +281,6 @@ public class EmailClientGUI extends JFrame {
                 downloadedAttachments.add(saveFile.getAbsolutePath());
             }
         }
-        if (!downloadedAttachments.isEmpty()) {
-            SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(null, "附件已被下載到: " + saveDirectory,
-                                              "下載成功", JOptionPane.INFORMATION_MESSAGE);
-            });
-        }
         return downloadedAttachments;
     }
 
