@@ -30,6 +30,7 @@ import javafx.application.Platform;
 import src.AIAnalyze;
 import javax.mail.internet.*;
 import java.text.SimpleDateFormat;
+import java.util.concurrent.TimeUnit;
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -206,7 +207,13 @@ public class EmailClientGUI extends JFrame {
                 showLoginDialog();
             }
         } else {
-            System.out.println("Login cancelled.");
+//            System.out.println("Login cancelled.");
+            JOptionPane.showMessageDialog(null, "Login cancelled." ,"information",JOptionPane.INFORMATION_MESSAGE);
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (Exception e) {
+            }
+            System.exit(0);
         }
     }
 
@@ -333,7 +340,7 @@ public class EmailClientGUI extends JFrame {
                 try{
                     String messageContent = getTextFromMessage(selectedMessage);
                     String responseBody = AIAnalyze.OpenAIAnalyze(messageContent);
-                    showanaly(responseBody);
+                    showanaly("AIAnalyze",responseBody);
                     return;
                 }catch (Exception e) {
                     e.printStackTrace();
@@ -369,9 +376,9 @@ public class EmailClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    public static void showanaly(String message) {// 創建 JDialog
+    public static void showanaly(String title,String message) {// 創建 JDialog
         JDialog dialog = new JDialog();
-        dialog.setTitle("Analyze");
+        dialog.setTitle(title);
         dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(null); // 使對話框居中顯
         // 創建 JTextArea 並設置自動換行

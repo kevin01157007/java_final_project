@@ -36,6 +36,7 @@ public class EmailSessionManager {
     public static EmailSessionManager getInstance() throws IllegalStateException {
         if (instance == null) {
             throw new IllegalStateException("EmailSessionManager is not initialized. Please login first.");
+
         }
         return instance;
     }
