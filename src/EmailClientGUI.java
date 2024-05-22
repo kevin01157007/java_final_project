@@ -364,19 +364,22 @@ public class EmailClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    public static void showanaly(String message) {
-        // 創建 JDialog
+    public static void showanaly(String message) {// 創建 JDialog
         JDialog dialog = new JDialog();
         dialog.setTitle("Analyze");
-        dialog.setSize(300, 200);
-        dialog.setLocationRelativeTo(null); // 使對話框居中顯示
-        // 創建 JLabel 並添加到對話框
-        JLabel label = new JLabel(message);
-        label.setHorizontalAlignment(SwingConstants.CENTER); // 文字置中
-        dialog.add(label);
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(null); // 使對話框居中顯
+        // 創建 JTextArea 並設置自動換行
+        JTextArea textArea = new JTextArea(message);
+        textArea.setLineWrap(true); // 自動換行
+        textArea.setWrapStyleWord(true); // 只在單詞邊界換行
+        textArea.setEditable(false); // 設置為不可編輯
+        // 創建 JScrollPane 並將 JTextArea 添加到其中
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        // 添加 JScrollPane 到對話框
+        dialog.add(scrollPane);
 
-        // 設定對話框可見
-        dialog.setVisible(true);
+        dialog.setVisible(true); // 顯示對話框
     }
     private void showComposeDialog(String to, String subject, String body) {
         JDialog composeDialog = new JDialog(this, "Compose Email", true);
