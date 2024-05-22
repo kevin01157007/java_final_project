@@ -29,7 +29,7 @@ import javafx.scene.web.WebView;
 import javafx.application.Platform;
 import src.AIAnalyze;
 import javax.mail.internet.*;
-
+import java.text.SimpleDateFormat;
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -241,9 +241,12 @@ public class EmailClientGUI extends JFrame {
     private void emailListSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting() && emailList.getSelectedIndex() != -1) {
             try {
-                Message selectedMessage = messages[emailList.getSelectedIndex()];
+                Message selectedMessage = messages[messages.length - 1 - emailList.getSelectedIndex()];
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                String formattedDate = dateFormat.format(selectedMessage.getSentDate());
                 String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
                 content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
+                content += "Date: " + formattedDate + "<br><br>";
                 content += getTextFromMessage(selectedMessage);
                 showHtmlContent(content);
             } catch (MessagingException | IOException ex) {
@@ -318,7 +321,7 @@ public class EmailClientGUI extends JFrame {
             return;
         }
         try {
-            Message selectedMessage = messages[emailList.getSelectedIndex()];
+            Message selectedMessage = messages[messages.length - 1 - emailList.getSelectedIndex()];
             if (actionType.equals("Delete")) {
                 EmailSessionManager.getInstance().deleteEmail(selectedMessage);
                 refreshInbox();
