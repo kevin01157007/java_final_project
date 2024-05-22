@@ -107,6 +107,9 @@ public class EmailClientGUI extends JFrame {
         searchSubjectField.addActionListener(e -> {
             try {
                 Message[] searchedMessage = EmailSessionManager.getInstance().searchUser(messages, searchSubjectField.getText());
+                if (searchedMessage.length == 0) {
+                    JOptionPane.showMessageDialog(null, "查無寄件者", "Search No Sender", JOptionPane.INFORMATION_MESSAGE);
+                }
                 messages = searchedMessage;
                 System.out.println(Arrays.toString(messages));
                 emailListModel.clear();
@@ -221,7 +224,9 @@ public class EmailClientGUI extends JFrame {
             webView.getEngine().loadContent(html);
         });
     }
-    
+
+    enum refreshMode {getMessageFromFolder, getMessageFromOriginal}
+
     private void refreshInbox() {
         try {
             // Get the current date
@@ -240,6 +245,20 @@ public class EmailClientGUI extends JFrame {
 
         } catch (MessagingException e) {
             JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void refreshInbox(refreshMode refreshMode) {
+        if (refreshMode == refreshMode.getMessageFromFolder) {refreshInbox();}
+        else if (refreshMode == refreshMode.getMessageFromOriginal) {
+            emailListModel.clear();
+            try {
+                for (int i = 0; i < messages.length; i++) {
+                    emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
+                }
+            } catch (MessagingException e) {
+                JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -323,7 +342,10 @@ public class EmailClientGUI extends JFrame {
             Message selectedMessage = messages[emailList.getSelectedIndex()];
             if (actionType.equals("Delete")) {
                 EmailSessionManager.getInstance().deleteEmail(selectedMessage);
-                refreshInbox();
+                List<Message> list = new ArrayList<>(Arrays.asList(messages));
+                list.remove(selectedMessage);
+                messages = list.toArray(new Message[list.size()]);
+                refreshInbox(refreshMode.getMessageFromOriginal);
                 Platform.runLater(() -> emailContent.setScene(new Scene(new WebView()))
                 );
                 return;

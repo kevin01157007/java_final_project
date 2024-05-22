@@ -59,18 +59,6 @@ public class EmailSessionManager {
         return emailFolder.getMessageCount();
     }
 
-    public Message[] receiveEmail() throws MessagingException {
-        if (emailFolder == null || !emailFolder.isOpen()) {
-            emailFolder = store.getFolder("INBOX");
-            emailFolder.open(Folder.READ_ONLY);
-        }
-        Message[] messages = emailFolder.getMessages();
-        List<Message> messageList = Arrays.asList(messages);
-        Collections.reverse(messageList);
-        System.out.println(messageList);
-        return messageList.toArray(new Message[0]);
-    }
-
     public Message[] searchEmail(SearchTerm searchTerm) throws MessagingException {
         if (emailFolder == null || !emailFolder.isOpen()) {
             emailFolder = store.getFolder("INBOX");
@@ -84,11 +72,7 @@ public class EmailSessionManager {
     }
 
     public Message[] searchUser(Message[] messages, String username) throws MessagingException {
-//        if (emailFolder == null || !emailFolder.isOpen()) {
-//            emailFolder = store.getFolder("INBOX");
-//            emailFolder.open(Folder.READ_ONLY);
-//        }
-//        messages = emailFolder.getMessages();
+
         ArrayList<Message> searchedMessages = new ArrayList<Message>();
         int idx = 0;
         for (int i = 0; i < messages.length; i++) {
@@ -97,7 +81,6 @@ public class EmailSessionManager {
             if (personal != null && personal.toLowerCase().contains(username.toLowerCase()))
                 searchedMessages.add(messages[i]);
         }
-        System.out.println(idx++);
         return searchedMessages.toArray(new Message[0]);
     }
 
