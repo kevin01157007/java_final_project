@@ -29,7 +29,7 @@ import javafx.scene.web.WebView;
 import javafx.application.Platform;
 import src.AIAnalyze;
 import javax.mail.internet.*;
-
+import java.text.SimpleDateFormat;
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
@@ -38,6 +38,7 @@ public class EmailClientGUI extends JFrame {
     private JFXPanel emailContent = new JFXPanel();
     private Message[] messages;
     private int lastEmailCount = 0;
+
     public EmailClientGUI() {
         setTitle("Java Email Client");
         setSize(800, 600);
@@ -228,9 +229,10 @@ public class EmailClientGUI extends JFrame {
 
             messages = EmailSessionManager.getInstance().searchEmail(searchTerm);
             emailListModel.clear();
-            for (int i = messages.length-1; i >= 0; i--) {
+            for (int i = 0; i < messages.length; i++) {
                 emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
             }
+
         } catch (MessagingException e) {
             JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -240,8 +242,11 @@ public class EmailClientGUI extends JFrame {
         if (!e.getValueIsAdjusting() && emailList.getSelectedIndex() != -1) {
             try {
                 Message selectedMessage = messages[emailList.getSelectedIndex()];
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                String formattedDate = dateFormat.format(selectedMessage.getSentDate());
                 String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
                 content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
+                content += "Date: " + formattedDate + "<br><br>";
                 content += getTextFromMessage(selectedMessage);
                 showHtmlContent(content);
             } catch (MessagingException | IOException ex) {
