@@ -241,7 +241,7 @@ public class EmailClientGUI extends JFrame {
     private void emailListSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting() && emailList.getSelectedIndex() != -1) {
             try {
-                Message selectedMessage = messages[messages.length - 1 - emailList.getSelectedIndex()];
+                Message selectedMessage = messages[emailList.getSelectedIndex()];
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 String formattedDate = dateFormat.format(selectedMessage.getSentDate());
                 String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
@@ -321,7 +321,7 @@ public class EmailClientGUI extends JFrame {
             return;
         }
         try {
-            Message selectedMessage = messages[messages.length - 1 - emailList.getSelectedIndex()];
+            Message selectedMessage = messages[emailList.getSelectedIndex()];
             if (actionType.equals("Delete")) {
                 EmailSessionManager.getInstance().deleteEmail(selectedMessage);
                 refreshInbox();
