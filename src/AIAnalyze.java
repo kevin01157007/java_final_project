@@ -1,4 +1,5 @@
 package src;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -7,36 +8,40 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class AIAnalyze {
     public static String OpenAIAnalyze(String message) throws Exception {
         try {
-            String apiKey = "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"; // 替換為你的 API 密鑰
-            // 手動構建 JSON 陣列
-            String escapedMessage = escapeHtml(message);
-            String messageWithoutNewlines = escapedMessage.replaceAll("\\n", "");
-            String jsonMessages = "[" +
-                    "{\"role\": \"system\", \"content\": \"" + "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with chinese.Please ensure that each line in the message does not exceed 30 characters in English. " + "\"}," +
-                    "{\"role\": \"user\", \"content\": \"" +messageWithoutNewlines+ "\"}" +
-                          "]";
+            String apiKey = "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"; // 替换为你的 API 密钥
 
-            // 使用 Apache HttpClient 庫發送 HTTP POST 請求
+            // 使用 Jsoup 解析 HTML 并提取纯文本
+            String plainTextMessage = Jsoup.parse(message).text();
+            String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
+
+            String jsonMessages = "[" +
+                    "{\"role\": \"system\", \"content\": \"" + "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Chinese. " + "\"}," +
+                    "{\"role\": \"user\", \"content\": \"" + messageWithoutNewlines + "\"}" +
+                    "]";
+            System.out.println(messageWithoutNewlines);
+            // 使用 Apache HttpClient 库发送 HTTP POST 请求
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
-            httpPost.setHeader("Authorization", "Bearer " + apiKey); // 設置 Authorization 頭部
+            httpPost.setHeader("Authorization", "Bearer " + apiKey); // 设置 Authorization 头部
             httpPost.setHeader("Content-Type", "application/json");
 
-            // 設置請求主體（這裡假設郵件內容已經轉換成 JSON 格式）
+            // 设置请求主体（这里假设邮件内容已经转换成 JSON 格式）
             StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}");
             httpPost.setEntity(requestEntity);
 
-            // 執行請求並獲取回應
+            // 执行请求并获取响应
             CloseableHttpResponse response = httpClient.execute(httpPost);
             HttpEntity responseEntity = response.getEntity();
 
-            // 解析回應
+            // 解析响应
             if (responseEntity != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(responseEntity.getContent()));
                 String line;
@@ -45,31 +50,21 @@ public class AIAnalyze {
                     responseContent.append(line);
                 }
 
-                // 將回應內容轉換成 JSON 物件
+                // 将响应内容转换成 JSON 对象
                 JSONObject jsonResponse = new JSONObject(responseContent.toString());
                 JSONArray choicesArray = jsonResponse.getJSONArray("choices");
                 JSONObject firstChoice = choicesArray.getJSONObject(0);
                 String content = firstChoice.getJSONObject("message").getString("content");
 
-                // 輸出 content 欄位的值
-
+                // 输出 content 字段的值
                 return content;
             }
 
-            // 關閉 HTTP 客戶端
+            // 关闭 HTTP 客户端
             httpClient.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
-    }
-    private static String escapeHtml(String html) {
-        return html.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t")
-                .replace("\b", "\\b")
-                .replace("\f", "\\f");
     }
 }
