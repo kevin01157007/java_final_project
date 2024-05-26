@@ -14,19 +14,25 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class AIAnalyze {
-    public static String OpenAIAnalyze(String message) throws Exception {
+    public static String OpenAIAnalyze(String message,int i) throws Exception {
         try {
             String apiKey = "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"; // 替换为你的 API 密钥
-
+            String prompt = null;
+            if(i==1){
+                prompt ="You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Chinese. " ;
+            }else
+//                prompt ="You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Chinese. " ;
+                prompt ="You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize the content briefly, and finally report to me in Chinese." ;
             // 使用 Jsoup 解析 HTML 并提取纯文本
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
 
             String jsonMessages = "[" +
-                    "{\"role\": \"system\", \"content\": \"" + "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Chinese. " + "\"}," +
+                    "{\"role\": \"system\", \"content\": \"" + prompt + "\"}," +
                     "{\"role\": \"user\", \"content\": \"" + messageWithoutNewlines + "\"}" +
                     "]";
-            System.out.println(messageWithoutNewlines);
+//            System.out.println(prompt);
+//            System.out.println(messageWithoutNewlines);
             // 使用 Apache HttpClient 库发送 HTTP POST 请求
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
@@ -55,7 +61,7 @@ public class AIAnalyze {
                 JSONArray choicesArray = jsonResponse.getJSONArray("choices");
                 JSONObject firstChoice = choicesArray.getJSONObject(0);
                 String content = firstChoice.getJSONObject("message").getString("content");
-
+//                System.out.println(jsonResponse);
                 // 输出 content 字段的值
                 return content;
             }

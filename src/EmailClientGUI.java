@@ -132,6 +132,7 @@ public class EmailClientGUI extends JFrame {
 
         getContentPane().setBackground(BACKGROUND_COLOR);
         getContentPane().add(splitPane, BorderLayout.CENTER);
+        JButton AIAnalyzeEmail = new JButton("群組分析");
         JButton addEmailButton = new JButton("加入群組");
         JButton removeEmailButton = new JButton("移除群組");
         JButton showEmailButton = new JButton("顯示郵件群組");
@@ -141,6 +142,7 @@ public class EmailClientGUI extends JFrame {
         JButton forwardButton = new JButton("Forward");
         JButton deleteButton = new JButton("刪除郵件");
 
+        AIAnalyzeEmail.setFont(BUTTON_FONT);
         addEmailButton.setFont(BUTTON_FONT);
         removeEmailButton.setFont(BUTTON_FONT);
         showEmailButton.setFont(BUTTON_FONT);
@@ -149,7 +151,7 @@ public class EmailClientGUI extends JFrame {
         replyButton.setFont(BUTTON_FONT);
         forwardButton.setFont(BUTTON_FONT);
         deleteButton.setFont(BUTTON_FONT);
-
+        AIAnalyzeEmail.setBackground(BUTTON_COLOR);
         addEmailButton.setBackground(BUTTON_COLOR);
         removeEmailButton.setBackground(BUTTON_COLOR);
         showEmailButton.setBackground(BUTTON_COLOR);
@@ -158,7 +160,7 @@ public class EmailClientGUI extends JFrame {
         replyButton.setBackground(BUTTON_COLOR);
         forwardButton.setBackground(BUTTON_COLOR);
         deleteButton.setBackground(BUTTON_COLOR);
-
+        AIAnalyzeEmail.addActionListener(e -> prepareEmailAction("AllAnalyze"));
         addEmailButton.addActionListener(e -> prepareEmailAction("addEmail"));
         removeEmailButton.addActionListener(e -> prepareEmailAction("removeEmail"));
         showEmailButton.addActionListener(e -> prepareEmailAction("showEmail"));
@@ -170,6 +172,7 @@ public class EmailClientGUI extends JFrame {
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actionPanel.setBackground(ACTION_PANEL_COLOR);
+        actionPanel.add(AIAnalyzeEmail);
         actionPanel.add(addEmailButton);
         actionPanel.add(removeEmailButton);
         actionPanel.add(showEmailButton);
@@ -405,13 +408,33 @@ public class EmailClientGUI extends JFrame {
                 case "AIAnalyze" -> {
                     try {
                         String messageContent = getTextFromMessage(selectedMessage);
-                        String responseBody = AIAnalyze.OpenAIAnalyze(messageContent);
+                        String responseBody = AIAnalyze.OpenAIAnalyze(messageContent,1);
                         showanaly("AIAnalyze", responseBody);
                         return;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
+                case "AllAnalyze" -> {
+                    try {
+                        String messageContent = "";
+                        int i=1;
+                        for (Message email : emailAnalyzeList) {
+
+                            String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
+                            messageContent += i+".從: " + messageWithoutNewlines+":";
+                            messageContent += getTextFromMessage(email);
+                            i++;
+                        }
+                        String responseBody = AIAnalyze.OpenAIAnalyze(messageContent,2);
+                        System.out.println(responseBody);
+                        showanaly("AllAnalyze", responseBody);
+                        return;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
             }
             String to;
             if (actionType.equals("Reply")||actionType.equals("AIReply")) {
