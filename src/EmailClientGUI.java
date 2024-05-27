@@ -405,6 +405,26 @@ public class EmailClientGUI extends JFrame {
                     );
                     return;
                 }
+                case "AIAnalyze" -> {
+                    try {
+                        String messageContent = getTextFromMessage(selectedMessage);
+                        String responseBody = AIAnalyze.OpenAIAnalyze(messageContent,1);
+                        showanaly("AIAnalyze", responseBody);
+                        return;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                case "AllAnalyze" -> {
+                    try {
+                        String messageContent = "";
+                        int i=1;
+                        for (Message email : emailAnalyzeList) {
+
+                            String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
+                            messageContent += i+".從: " + messageWithoutNewlines+":";
+                            messageContent += getTextFromMessage(email);
+                            i++;
                 case "AIAnalyze", "AllAnalyze" -> {
                     new Thread(() -> {
                         try {
