@@ -422,7 +422,9 @@ public class EmailClientGUI extends JFrame {
                         for (Message email : emailAnalyzeList) {
 
                             String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
-                            messageContent += i+".從: " + messageWithoutNewlines+":";
+                            String messageSubject = email.getSubject();
+                            messageContent += i+".從: " + messageWithoutNewlines+":傳給我";
+                            messageContent += "主題: "+messageSubject+"內文:";
                             messageContent += getTextFromMessage(email);
                             i++;
                         }
