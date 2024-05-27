@@ -405,7 +405,6 @@ public class EmailClientGUI extends JFrame {
                     );
                     return;
                 }
-<<<<<<< Updated upstream
                 case "AIAnalyze" -> {
                     try {
                         String messageContent = getTextFromMessage(selectedMessage);
@@ -428,7 +427,6 @@ public class EmailClientGUI extends JFrame {
                             messageContent += "主題: "+messageSubject+"內文:";
                             messageContent += getTextFromMessage(email);
                             i++;
-=======
                 case "AIAnalyze", "AllAnalyze" -> {
                     new Thread(() -> {
                         try {
@@ -447,7 +445,6 @@ public class EmailClientGUI extends JFrame {
                             SwingUtilities.invokeLater(() -> showanaly(actionType, responseBody));
                         } catch (Exception e) {
                             e.printStackTrace();
->>>>>>> Stashed changes
                         }
                     }).start();
                     return;
