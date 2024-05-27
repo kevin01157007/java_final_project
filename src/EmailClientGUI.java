@@ -405,34 +405,27 @@ public class EmailClientGUI extends JFrame {
                     );
                     return;
                 }
-                case "AIAnalyze" -> {
-                    try {
-                        String messageContent = getTextFromMessage(selectedMessage);
-                        String responseBody = AIAnalyze.OpenAIAnalyze(messageContent,1);
-                        showanaly("AIAnalyze", responseBody);
-                        return;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                case "AllAnalyze" -> {
-                    try {
-                        String messageContent = "";
-                        int i=1;
-                        for (Message email : emailAnalyzeList) {
-
-                            String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
-                            messageContent += i+".從: " + messageWithoutNewlines+":";
-                            messageContent += getTextFromMessage(email);
-                            i++;
+                case "AIAnalyze", "AllAnalyze" -> {
+                    new Thread(() -> {
+                        try {
+                            String messageContent = getTextFromMessage(selectedMessage);
+                            if (actionType.equals("AllAnalyze")) {
+                                messageContent = "";
+                                int i = 1;
+                                for (Message email : emailAnalyzeList) {
+                                    String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
+                                    messageContent += i + ".從: " + messageWithoutNewlines + ":";
+                                    messageContent += getTextFromMessage(email);
+                                    i++;
+                                }
+                            }
+                            String responseBody = AIAnalyze.OpenAIAnalyze(messageContent, actionType.equals("AIAnalyze") ? 1 : 2);
+                            SwingUtilities.invokeLater(() -> showanaly(actionType, responseBody));
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                        String responseBody = AIAnalyze.OpenAIAnalyze(messageContent,2);
-                        System.out.println(responseBody);
-                        showanaly("AllAnalyze", responseBody);
-                        return;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    }).start();
+                    return;
                 }
 
             }
@@ -451,13 +444,15 @@ public class EmailClientGUI extends JFrame {
             String subject = subjectPrefix + selectedMessage.getSubject();
             String body = getTextFromMessage(selectedMessage);
             if(actionType.equals("AIReply")){
-                try {
-                    String responseBody = OpenAIChat.sendOpenAIRequest(body);
-                    showComposeDialog(to, subject, responseBody);
+                new Thread(() -> {
+                    try {
+                        String responseBody = OpenAIChat.sendOpenAIRequest(body);
+                        showComposeDialog(to, subject, responseBody);
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
 
             }else {showComposeDialog(to, subject, body);
             }
@@ -538,7 +533,6 @@ public class EmailClientGUI extends JFrame {
 
         bottomPanel.add(attachedFilesLabel);
         bottomPanel.add(attachButton);
-        bottomPanel.add(removeFileButton);
         bottomPanel.add(sendButton);
 
         composeDialog.add(fieldsPanel, BorderLayout.NORTH);
