@@ -30,7 +30,6 @@ public class AIAnalyze {
             } else {
                 prompt = "You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize the content briefly, and finally report to me in Chinese.";
             }
-
             // 使用 Jsoup 解析 HTML 并提取纯文本
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
