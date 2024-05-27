@@ -136,10 +136,10 @@ public class EmailClientGUI extends JFrame {
         JButton addEmailButton = new JButton("加入群組");
         JButton removeEmailButton = new JButton("移除群組");
         JButton showEmailButton = new JButton("顯示郵件群組");
-        JButton AIAnalyzeButton = new JButton("AIAnalyze");
-        JButton AIreplyButton = new JButton("AIReply");
-        JButton replyButton = new JButton("Reply");
-        JButton forwardButton = new JButton("Forward");
+        JButton AIAnalyzeButton = new JButton("AI分析");
+        JButton AIreplyButton = new JButton("AI回覆");
+        JButton replyButton = new JButton("回覆");
+        JButton forwardButton = new JButton("轉寄");
         JButton deleteButton = new JButton("刪除郵件");
 
         AIAnalyzeEmail.setFont(BUTTON_FONT);
@@ -170,7 +170,7 @@ public class EmailClientGUI extends JFrame {
         forwardButton.addActionListener(e -> prepareEmailAction("Forward"));
         deleteButton.addActionListener(e -> prepareEmailAction("Delete"));
 
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel actionPanel = new JPanel(new FlowLayout());
         actionPanel.setBackground(ACTION_PANEL_COLOR);
         actionPanel.add(AIAnalyzeEmail);
         actionPanel.add(addEmailButton);
