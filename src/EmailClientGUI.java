@@ -538,7 +538,9 @@ public class EmailClientGUI extends JFrame {
             composeDialog.dispose();
         });
 
+        bottomPanel.add(attachedFilesLabel);
         bottomPanel.add(attachButton);
+        bottomPanel.add(removeFileButton);
         bottomPanel.add(sendButton);
 
         composeDialog.add(fieldsPanel, BorderLayout.NORTH);
