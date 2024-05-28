@@ -46,9 +46,8 @@ public class AIAnalyze {
             httpPost.setHeader("Content-Type", "application/json");
 
             // 设置请求主体（这里假设邮件内容已经转换成 JSON 格式）
-            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}");
+            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}", "UTF-8");
             httpPost.setEntity(requestEntity);
-
             // 执行请求并获取响应
             CloseableHttpResponse response = httpClient.execute(httpPost);
             HttpEntity responseEntity = response.getEntity();
