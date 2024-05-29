@@ -221,11 +221,13 @@ public class EmailClientGUI extends JFrame {
         try {
             File file = new File("../java_final_project/credentials.txt");
             Scanner scanner = new Scanner(file);
-            if (scanner.hasNextLine()) {
-                usernameField.setText(scanner.nextLine().trim());
-            }
-            if (scanner.hasNextLine()) {
-                passwordField.setText(scanner.nextLine().trim());
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.startsWith("Email:")) {
+                    usernameField.setText(line.substring(line.indexOf(":") + 1).trim());
+                } else if (line.startsWith("App password:")) {
+                    passwordField.setText(line.substring(line.indexOf(":") + 1).trim());
+                }
             }
             scanner.close();
         } catch (FileNotFoundException e) {
