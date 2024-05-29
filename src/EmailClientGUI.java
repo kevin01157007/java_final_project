@@ -2,14 +2,14 @@ package src;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
-import java.awt.FlowLayout;
+
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.mail.*;
@@ -218,6 +218,19 @@ public class EmailClientGUI extends JFrame {
         passwordField.setFont(EMAIL_LIST_FONT);
         panel.add(passwordField);
 
+        try {
+            File file = new File("../java_final_project/credentials.txt");
+            Scanner scanner = new Scanner(file);
+            if (scanner.hasNextLine()) {
+                usernameField.setText(scanner.nextLine().trim());
+            }
+            if (scanner.hasNextLine()) {
+                passwordField.setText(scanner.nextLine().trim());
+            }
+            scanner.close();
+        } catch (FileNotFoundException e) {
+        JOptionPane.showMessageDialog(this, "Credentials file not found.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
         int result = JOptionPane.showConfirmDialog(null, panel, "Login",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
