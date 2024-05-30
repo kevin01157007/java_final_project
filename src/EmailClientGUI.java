@@ -353,19 +353,32 @@ public class EmailClientGUI extends JFrame {
         if (part.isMimeType("text/plain")) {
             return convertPlainTextToHtml((String) part.getContent());
         } else if (part.isMimeType("text/html")) {
-            return (String) part.getContent(); 
+            return (String) part.getContent();
         } else if (part.isMimeType("multipart/*")) {
             MimeMultipart mimeMultipart = (MimeMultipart) part.getContent();
-            String result = "";
+            String htmlResult = "";
+            String plainTextResult = "";
             for (int i = 0; i < mimeMultipart.getCount(); i++) {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
                 downloadAttachments(bodyPart,"../java_final_project/downloads");
-                String partText = getTextFromPart(bodyPart);
-                if (partText != null && !partText.isEmpty()) {
-                    result += partText + "\n";
+                if (bodyPart.isMimeType("text/html")) {
+                    htmlResult = (String) bodyPart.getContent();
+                    break; // 如果找到 HTML 内容，立即停止搜索
+                } else if (bodyPart.isMimeType("text/plain")) {
+                    if (plainTextResult.isEmpty()) { // 只在没有找到纯文本内容时才提取
+                        plainTextResult = convertPlainTextToHtml((String) bodyPart.getContent());
+                    }
+                } else if (bodyPart.getContent() instanceof MimeMultipart) {
+                    String recursiveResult = getTextFromPart(bodyPart);
+                    if (recursiveResult.contains("<html>")) { // 如果递归结果包含 HTML 标签，认为是 HTML 内容
+                        htmlResult = recursiveResult;
+                        break;
+                    } else if (plainTextResult.isEmpty()) {
+                        plainTextResult = recursiveResult;
+                    }
                 }
             }
-            return result.trim();
+            return !htmlResult.isEmpty() ? htmlResult : plainTextResult; // 优先返回 HTML 内容
         }
         return "";
     }
@@ -458,6 +471,7 @@ public class EmailClientGUI extends JFrame {
             }
             String subject = subjectPrefix + selectedMessage.getSubject();
             String body = getTextFromMessage(selectedMessage);
+            final String finalBody = body.replace("<html><body>", "").replace("</body></html>", "");
             if(actionType.equals("AIReply")){
                 new Thread(() -> {
                     try {
@@ -469,7 +483,7 @@ public class EmailClientGUI extends JFrame {
                     }
                 }).start();
 
-            }else {showComposeDialog(to, subject, body);
+            }else {showComposeDialog(to, subject, finalBody);
             }
         } catch (MessagingException | IOException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

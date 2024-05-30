@@ -32,7 +32,7 @@ public class EmailSender {
                 Multipart multipart = new MimeMultipart();
 
                 MimeBodyPart textPart = new MimeBodyPart();
-                textPart.setText(body);
+                textPart.setContent(body, "text/html; charset=utf-8");
                 multipart.addBodyPart(textPart);
 
                 for (File file : attachments) {

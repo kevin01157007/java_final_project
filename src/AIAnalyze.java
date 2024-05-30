@@ -26,7 +26,7 @@ public class AIAnalyze {
             String apiKey = "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"; // 替换为你的 API 密钥
             String prompt = null;
             if (i == 1) {
-                prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. ";
+                prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese.The fewer words the better. ";
             } else {
                 prompt = "You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize the content briefly, and finally report to me in Traditional Chinese.";
             }
