@@ -23,29 +23,40 @@ import java.awt.event.WindowEvent;
 import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
-import src.AIAnalyze;
+
 import javax.mail.internet.*;
 import java.text.SimpleDateFormat;
-import java.util.concurrent.TimeUnit;
+
+import com.formdev.flatlaf.FlatLightLaf;
+
 public class EmailClientGUI extends JFrame {
     private JTextField usernameField = new JTextField();
+    JTextArea bodyArea = new JTextArea(10, 20);
     private  ArrayList<Message> emailAnalyzeList = new ArrayList<>();
     private JPasswordField passwordField = new JPasswordField();
     private DefaultListModel<String> emailListModel = new DefaultListModel<>();
+    private DefaultListModel<String> groupListModel = new DefaultListModel<>();
     private JList<String> emailList = new JList<>(emailListModel);
+    private JList<String> groupList = new JList<>(groupListModel);
     private JFXPanel emailContent = new JFXPanel();
     private Message[] messages;
     private int lastEmailCount = 0;
+    private JButton AIreplyButton = new JButton("AI回覆");
+    private JPanel leftPanel = new JPanel();
+    private JPanel groupPanel = new JPanel(new BorderLayout());
+    private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    private JSplitPane splitPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+
+
 
     public EmailClientGUI() {
         setTitle("Java Email Client");
-        setSize(800, 600);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initUI();
         setVisible(true);
@@ -63,159 +74,159 @@ public class EmailClientGUI extends JFrame {
             }
         });
     }
-
-    private static final Color BACKGROUND_COLOR = new Color(230, 240, 250);
-    private static final Color ACTION_PANEL_COLOR = new Color(200, 220, 240);
-    private static final Color BUTTON_COLOR = new Color(180, 220, 240);
-    private static final Font BUTTON_FONT = new Font("SansSerif", Font.BOLD, 12);
-    private static final Font EMAIL_LIST_FONT = new Font("SansSerif", Font.PLAIN, 14);
-    private static final Font EMAIL_CONTENT_FONT = new Font("SansSerif", Font.PLAIN, 14);
+    enum ButtonAction {REPLY, FORWARD, DELETE, AI_REPLY, ADD_GROUP, DELETE_GROUP, AI_ANALYZE_GROUP, AI_ANALYZE}
 
     private void initUI() {
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setResizeWeight(0.5);
         splitPane.setOneTouchExpandable(true);
         //設定主介面左邊區塊
-        JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BorderLayout());
-        leftPanel.setBackground(BACKGROUND_COLOR);
+
         //設定信件清單
         emailList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         emailList.addListSelectionListener(this::emailListSelectionChanged);
-        emailList.setFont(EMAIL_LIST_FONT);
-        JScrollPane listScrollPane = new JScrollPane(emailList);
-        listScrollPane.setBackground(BACKGROUND_COLOR);
         leftPanel.add(new JScrollPane(emailList));
+
         //設定標題搜尋欄
-        JTextField searchSubjectField = new JTextField("搜尋寄件者");
-        searchSubjectField.addFocusListener(new FocusListener() {
+        JTextField searchField = new JTextField("搜尋寄件者");
+        searchField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (searchSubjectField.getText().equals("搜尋寄件者")) {
-                    searchSubjectField.setText("");
-                    searchSubjectField.setForeground(Color.BLACK);
+                if (searchField.getText().equals("搜尋寄件者")) {
+                    searchField.setText("");
+                    searchField.setForeground(Color.BLACK);
                 }
             }
             @Override
             public void focusLost(FocusEvent e) {
-                if (searchSubjectField.getText().isEmpty()) {
-                    searchSubjectField.setText("搜尋寄件者");
-                    searchSubjectField.setForeground(Color.GRAY);
+                if (searchField.getText().isEmpty()) {
+                    searchField.setText("搜尋寄件者");
+                    searchField.setForeground(Color.GRAY);
                 }
             }
         });
-        searchSubjectField.setFont(EMAIL_CONTENT_FONT);
-        searchSubjectField.addActionListener(e -> {
+        searchField.addActionListener(e -> {
             try {
-                Message[] searchedMessage = EmailSessionManager.getInstance().searchUser(messages, searchSubjectField.getText());
+                Message[] searchedMessage = EmailSessionManager.getInstance().searchUser(messages, searchField.getText());
                 if (searchedMessage.length == 0) {
                     JOptionPane.showMessageDialog(null, "查無寄件者", "Search No Sender", JOptionPane.INFORMATION_MESSAGE);
                 }
                 messages = searchedMessage;
-                System.out.println(Arrays.toString(messages));
                 emailListModel.clear();
                 for (int i = messages.length-1; i >= 0; i--) {
-                    emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
+                    emailListModel.addElement((((InternetAddress)(messages[i].getFrom()[0])).getPersonal())+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
                 }
             }catch (MessagingException ex) {ex.printStackTrace();}
         });
-        leftPanel.add(searchSubjectField, BorderLayout.NORTH);
+        leftPanel.add(searchField, BorderLayout.NORTH);
 
         //設定信件內容
         Platform.runLater(() -> {
             WebView webView = new WebView();
             emailContent.setScene(new Scene(webView));
         });
-        emailContent.setBackground(BACKGROUND_COLOR);
+
         splitPane.setLeftComponent(leftPanel);
         splitPane.setRightComponent(emailContent);
+        splitPane.setDividerLocation(300);
 
-        getContentPane().setBackground(BACKGROUND_COLOR);
-        getContentPane().add(splitPane, BorderLayout.CENTER);
-        JButton AIAnalyzeEmail = new JButton("群組分析");
-        JButton addEmailButton = new JButton("加入群組");
-        JButton removeEmailButton = new JButton("移除群組");
-        JButton showEmailButton = new JButton("顯示郵件群組");
-        JButton AIAnalyzeButton = new JButton("AI分析");
-        JButton AIreplyButton = new JButton("AI回覆");
-        JButton replyButton = new JButton("回覆");
-        JButton forwardButton = new JButton("轉寄");
-        JButton deleteButton = new JButton("刪除郵件");
+        //按鈕
+        //ImageIcon showGroupIcon = new ImageIcon(getClass().getResource("/icons/showGroup.png") );
+        ImageIcon replyIcon = new ImageIcon(getClass().getResource("/icons/reply.png"));
+        ImageIcon forwardIcon = new ImageIcon(getClass().getResource("/icons/forward.png"));
+        ImageIcon deleteIcon = new ImageIcon(getClass().getResource("/icons/delete.png"));
+        ImageIcon composeIcon = new ImageIcon(getClass().getResource("/icons/compose.png"));
+        ImageIcon refreshIcon = new ImageIcon(getClass().getResource("/icons/refresh.png"));
+        ImageIcon aiAnalyzeIcon = new ImageIcon(getClass().getResource("/icons/ai_analyze.png"));
+        ImageIcon deleteGroupIcon = new ImageIcon(getClass().getResource("/icons/delete_group.png"));
+        ImageIcon addGroupIcon = new ImageIcon(getClass().getResource("/icons/add_group.png"));
+//        Image replyImage = replyIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image forwardImage = forwardIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image deleteImage = deleteIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image composeImage = composeIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image refreshImage = refreshIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image aiAnalyzeImage = aiAnalyzeIcon.getImage().getScaledInstance(16, 16, Image.SCALE_AREA_AVERAGING);
+//        Image deleteGroupImage = deleteGroupIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image addGroupImage = addGroupIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        Image aiAnalyzeGroupImage = aiAnalyzeGroupIcon.getImage().getScaledInstance(24, 24, Image.SCALE_AREA_AVERAGING);
+//        replyIcon.setImage(replyImage);
+//        forwardIcon.setImage(forwardImage);
+//        deleteIcon.setImage(deleteImage);
+//        composeIcon.setImage(composeImage);
+//        refreshIcon.setImage(refreshImage);
+//        aiAnalyzeIcon.setImage(aiAnalyzeImage);
+//        deleteGroupIcon.setImage(deleteGroupImage);
+//        addGroupIcon.setImage(addGroupImage);
+//        aiAnalyzeGroupIcon.setImage(aiAnalyzeGroupImage);
+        JButton aiAnalyzeButton = new JButton(aiAnalyzeIcon);
+        JButton replyButton = new JButton(replyIcon);
+        JButton forwardButton = new JButton(forwardIcon);
+        JButton deleteButton = new JButton(deleteIcon);
+        JButton composeButton = new JButton(composeIcon);
+        JButton refreshInboxButton = new JButton(refreshIcon);
+        JButton addGroupButton = new JButton(addGroupIcon);
+        JButton deleteGroupButton = new JButton(deleteGroupIcon);
+        JButton aiAnalyzeGroupButton = new JButton(aiAnalyzeIcon);
+        replyButton.setToolTipText("回覆");
+        forwardButton.setToolTipText("轉寄");
+        deleteButton.setToolTipText("刪除");
+        composeButton.setToolTipText("撰寫");
+        refreshInboxButton.setToolTipText("刷新");
+        aiAnalyzeButton.setToolTipText("AI分析");
+        aiAnalyzeGroupButton.setToolTipText("AI群組分析");
+        addGroupButton.setToolTipText("加入群組");
+        deleteGroupButton.setToolTipText("從群組刪除");
+        aiAnalyzeGroupButton.addActionListener(e -> prepareEmailAction(ButtonAction.AI_ANALYZE_GROUP));
+        addGroupButton.addActionListener(e -> prepareEmailAction(ButtonAction.ADD_GROUP));
+        deleteGroupButton.addActionListener(e -> prepareEmailAction(ButtonAction.DELETE_GROUP));
+        //showEmailButton.addActionListener(e -> prepareEmailAction(ButtonAction.SHOW_GROUP));
+        aiAnalyzeButton.addActionListener(e -> prepareEmailAction(ButtonAction.AI_ANALYZE));
+        AIreplyButton.addActionListener(e -> prepareEmailAction(ButtonAction.AI_REPLY));
+        replyButton.addActionListener(e -> prepareEmailAction(ButtonAction.REPLY));
+        forwardButton.addActionListener(e -> prepareEmailAction(ButtonAction.FORWARD));
+        deleteButton.addActionListener(e -> prepareEmailAction(ButtonAction.DELETE));
+        composeButton.addActionListener(e -> showComposeDialog("", "", "", false));
+        refreshInboxButton.addActionListener(e -> refreshInbox());
 
-        AIAnalyzeEmail.setFont(BUTTON_FONT);
-        addEmailButton.setFont(BUTTON_FONT);
-        removeEmailButton.setFont(BUTTON_FONT);
-        showEmailButton.setFont(BUTTON_FONT);
-        AIAnalyzeButton.setFont(BUTTON_FONT);
-        AIreplyButton.setFont(BUTTON_FONT);
-        replyButton.setFont(BUTTON_FONT);
-        forwardButton.setFont(BUTTON_FONT);
-        deleteButton.setFont(BUTTON_FONT);
-        AIAnalyzeEmail.setBackground(BUTTON_COLOR);
-        addEmailButton.setBackground(BUTTON_COLOR);
-        removeEmailButton.setBackground(BUTTON_COLOR);
-        showEmailButton.setBackground(BUTTON_COLOR);
-        AIAnalyzeButton.setBackground(BUTTON_COLOR);
-        AIreplyButton.setBackground(BUTTON_COLOR);
-        replyButton.setBackground(BUTTON_COLOR);
-        forwardButton.setBackground(BUTTON_COLOR);
-        deleteButton.setBackground(BUTTON_COLOR);
-        AIAnalyzeEmail.addActionListener(e -> prepareEmailAction("AllAnalyze"));
-        addEmailButton.addActionListener(e -> prepareEmailAction("addEmail"));
-        removeEmailButton.addActionListener(e -> prepareEmailAction("removeEmail"));
-        showEmailButton.addActionListener(e -> prepareEmailAction("showEmail"));
-        AIAnalyzeButton.addActionListener(e -> prepareEmailAction("AIAnalyze"));
-        AIreplyButton.addActionListener(e -> prepareEmailAction("AIReply"));
-        replyButton.addActionListener(e -> prepareEmailAction("Reply"));
-        forwardButton.addActionListener(e -> prepareEmailAction("Forward"));
-        deleteButton.addActionListener(e -> prepareEmailAction("Delete"));
-
-        JPanel actionPanel = new JPanel(new FlowLayout());
-        actionPanel.setBackground(ACTION_PANEL_COLOR);
-        actionPanel.add(AIAnalyzeEmail);
-        actionPanel.add(addEmailButton);
-        actionPanel.add(removeEmailButton);
-        actionPanel.add(showEmailButton);
-        actionPanel.add(AIAnalyzeButton);
-        actionPanel.add(AIreplyButton);
-        actionPanel.add(replyButton);
-        actionPanel.add(forwardButton);
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        actionPanel.add(composeButton);
+        actionPanel.add(refreshInboxButton);
         actionPanel.add(deleteButton);
-
+        actionPanel.add(forwardButton);
+        actionPanel.add(replyButton);
+        actionPanel.add(aiAnalyzeButton);
         add(actionPanel, BorderLayout.NORTH);
 
-        JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
-        bottomPanel.setBackground(ACTION_PANEL_COLOR);
-        JButton composeButton = new JButton("Compose");
-        JButton refreshInboxButton = new JButton("Refresh Inbox");
-        composeButton.setBackground(BUTTON_COLOR);
-        refreshInboxButton.setBackground(BUTTON_COLOR);
-        composeButton.setFont(BUTTON_FONT);
-        refreshInboxButton.setFont(BUTTON_FONT);
+        //群組
+        groupList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        JPanel groupButtonPanel = new JPanel();
+        groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
+        groupButtonPanel.add(addGroupButton);
+        groupButtonPanel.add(deleteGroupButton);
+        groupButtonPanel.add(aiAnalyzeGroupButton);
+        groupButtonPanel.setMinimumSize(new Dimension(40,40));
+        groupPanel.add(groupButtonPanel, BorderLayout.EAST);
+        groupPanel.add(new JScrollPane(groupList), BorderLayout.WEST);
+        splitPane2.setLeftComponent(splitPane);
+        splitPane2.setRightComponent(groupPanel);
+        splitPane2.setDividerLocation(this.getWidth()-50);
+        splitPane2.setOneTouchExpandable(true);
 
-        composeButton.addActionListener(e -> showComposeDialog("", "", ""));
-        refreshInboxButton.addActionListener(e -> refreshInbox());
-        bottomPanel.add(composeButton);
-        bottomPanel.add(refreshInboxButton);
-        add(bottomPanel, BorderLayout.SOUTH);
+        //將sp加進去畫面
+        getContentPane().add(splitPane2, BorderLayout.CENTER);
 
         SwingUtilities.invokeLater(this::showLoginDialog);
     }
 
     private void showLoginDialog() {
         JPanel panel = new JPanel(new GridLayout(0, 1));
-        panel.setBackground(BACKGROUND_COLOR);
 
-        JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setFont(BUTTON_FONT);
+        JLabel emailLabel = new JLabel("電子信箱:");
         panel.add(emailLabel);
-        usernameField.setFont(EMAIL_LIST_FONT);
         panel.add(usernameField);
 
-        JLabel passwordLabel = new JLabel("App Password:");
-        passwordLabel.setFont(BUTTON_FONT);
+        JLabel passwordLabel = new JLabel("應用程式密碼:");
         panel.add(passwordLabel);
-        passwordField.setFont(EMAIL_LIST_FONT);
         panel.add(passwordField);
 
         try {
@@ -231,9 +242,9 @@ public class EmailClientGUI extends JFrame {
             }
             scanner.close();
         } catch (FileNotFoundException e) {
-        JOptionPane.showMessageDialog(this, "Credentials file not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Credentials file not found.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        int result = JOptionPane.showConfirmDialog(null, panel, "Login",
+        int result = JOptionPane.showConfirmDialog(null, panel, "登入",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             String username = usernameField.getText();
@@ -245,7 +256,7 @@ public class EmailClientGUI extends JFrame {
                 startEmailCheckTimer();
             } catch (MessagingException e) {
                 JOptionPane.showMessageDialog(this, "Failed to initialize email session: " +
-                                e.getMessage() + "\n請重新登入", "Login Error", JOptionPane.ERROR_MESSAGE);
+                        e.getMessage() + "\n請重新登入", "Login Error", JOptionPane.ERROR_MESSAGE);
                 showLoginDialog();
             }
         } else {
@@ -277,7 +288,7 @@ public class EmailClientGUI extends JFrame {
             messages = EmailSessionManager.getInstance().searchEmail(searchTerm);
             emailListModel.clear();
             for (int i = 0; i < messages.length; i++) {
-                emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
+                emailListModel.addElement((((InternetAddress)(messages[i].getFrom()[0])).getPersonal())+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
             }
 
         } catch (MessagingException e) {
@@ -286,12 +297,12 @@ public class EmailClientGUI extends JFrame {
     }
 
     private void refreshInbox(refreshMode refreshMode) {
-        if (refreshMode == refreshMode.getMessageFromFolder) {refreshInbox();}
-        else if (refreshMode == refreshMode.getMessageFromOriginal) {
+        if (refreshMode == refreshMode.getMessageFromFolder) {refreshInbox();} //從server抓
+        else if (refreshMode == refreshMode.getMessageFromOriginal) { //從message抓
             emailListModel.clear();
             try {
                 for (int i = 0; i < messages.length; i++) {
-                    emailListModel.addElement(messages[i].getSubject() + " - From: " + InternetAddress.toString(messages[i].getFrom()));
+                    emailListModel.addElement((((InternetAddress)(messages[i].getFrom()[0])).getPersonal())+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
                 }
             } catch (MessagingException e) {
                 JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -348,7 +359,7 @@ public class EmailClientGUI extends JFrame {
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
         return getTextFromPart(message);
     }
-    
+
     private String getTextFromPart(Part part) throws MessagingException, IOException {
         if (part.isMimeType("text/plain")) {
             return convertPlainTextToHtml((String) part.getContent());
@@ -356,74 +367,62 @@ public class EmailClientGUI extends JFrame {
             return (String) part.getContent();
         } else if (part.isMimeType("multipart/*")) {
             MimeMultipart mimeMultipart = (MimeMultipart) part.getContent();
-            String htmlResult = "";
-            String plainTextResult = "";
+            String result = "";
             for (int i = 0; i < mimeMultipart.getCount(); i++) {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
                 downloadAttachments(bodyPart,"../java_final_project/downloads");
-                if (bodyPart.isMimeType("text/html")) {
-                    htmlResult = (String) bodyPart.getContent();
-                    break; // 如果找到 HTML 内容，立即停止搜索
-                } else if (bodyPart.isMimeType("text/plain")) {
-                    if (plainTextResult.isEmpty()) { // 只在没有找到纯文本内容时才提取
-                        plainTextResult = convertPlainTextToHtml((String) bodyPart.getContent());
-                    }
-                } else if (bodyPart.getContent() instanceof MimeMultipart) {
-                    String recursiveResult = getTextFromPart(bodyPart);
-                    if (recursiveResult.contains("<html>")) { // 如果递归结果包含 HTML 标签，认为是 HTML 内容
-                        htmlResult = recursiveResult;
-                        break;
-                    } else if (plainTextResult.isEmpty()) {
-                        plainTextResult = recursiveResult;
-                    }
+                String partText = getTextFromPart(bodyPart);
+                if (partText != null && !partText.isEmpty()) {
+                    result += partText + "\n";
                 }
             }
-            return !htmlResult.isEmpty() ? htmlResult : plainTextResult; // 优先返回 HTML 内容
+            return result.trim();
         }
         return "";
     }
 
-    private void prepareEmailAction(String actionType) {
+    private void prepareEmailAction(ButtonAction action) {
         if (emailList.getSelectedIndex() == -1) {
             JOptionPane.showMessageDialog(this, "No email selected.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         try {
             Message selectedMessage = messages[emailList.getSelectedIndex()];
-            switch (actionType) {
-                case "addEmail" -> {
-                    Message selectMessage = messages[emailList.getSelectedIndex()];
-                    if (!emailAnalyzeList.contains(selectMessage)) {
-                        emailAnalyzeList.add(selectMessage);
-                        JOptionPane.showMessageDialog(this, "郵件已加入分析列表。");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "這封郵件已被加過了!");
-                    }
-                    return;
-                }
-                case "removeEmail" -> {
-                    Message selectMessage = messages[emailList.getSelectedIndex()];
-                    if (emailAnalyzeList.contains(selectMessage)) {
-                        emailAnalyzeList.remove(selectMessage);
-                        JOptionPane.showMessageDialog(this, "郵件已從分析列表中移除。");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "此郵件不在群組裡。");
-                    }
-                    return;
-                }
-                case "showEmail" -> {
-                    if (emailAnalyzeList.isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "分析列表為空。");
-                    } else {
-                        String tmp = "";
-                        for (Message email : emailAnalyzeList) {
-                            tmp += email.getSubject() + " - From: " + InternetAddress.toString(email.getFrom()) + "\n";
+            switch (action) {
+                case ADD_GROUP -> {
+                    try {
+                        if (!emailAnalyzeList.contains(selectedMessage)) {
+                            emailAnalyzeList.add(selectedMessage);
+                            groupListModel.addElement((((InternetAddress) (selectedMessage.getFrom()[0])).getPersonal()) + "  -  " + selectedMessage.getSubject());
+                            JOptionPane.showMessageDialog(this, "郵件已加入分析列表。");
+                        } else {
+                            JOptionPane.showMessageDialog(this, "這封郵件已被加過了!");
                         }
-                        JOptionPane.showMessageDialog(this, tmp);
-                    }
-                    return;
+                    }catch (Exception e) {};
                 }
-                case "Delete" -> {
+                case DELETE_GROUP -> {
+                    int[] selectedIndices = groupList.getSelectedIndices();
+                    // 倒序刪除選中的項目，避免索引問題
+                    for (int i = selectedIndices.length - 1; i >= 0; i--) {
+                        // 從ArrayList中刪除
+                        emailAnalyzeList.remove(selectedIndices[i]);
+                        // 從DefaultListModel中刪除
+                        groupListModel.removeElementAt(selectedIndices[i]);
+                    }
+                }
+//                case SHOW_GROUP -> {
+//                  showGroupPane();
+//                    if (emailAnalyzeList.isEmpty()) {
+//                        JOptionPane.showMessageDialog(this, "分析列表為空。");
+//                    } else {
+//                        String tmp = "";
+//                        for (Message email : emailAnalyzeList) {
+//                            tmp += email.getSubject() + " - From: " + InternetAddress.toString(email.getFrom()) + "\n";
+//                        }
+//                        JOptionPane.showMessageDialog(this, tmp);
+//                    }
+                //}
+                case DELETE -> {
                     EmailSessionManager.getInstance().deleteEmail(selectedMessage);
                     List<Message> list = new ArrayList<>(Arrays.asList(messages));
                     list.remove(selectedMessage);
@@ -431,64 +430,101 @@ public class EmailClientGUI extends JFrame {
                     refreshInbox(refreshMode.getMessageFromOriginal);
                     Platform.runLater(() -> emailContent.setScene(new Scene(new WebView()))
                     );
-                    return;
                 }
-                case "AIAnalyze", "AllAnalyze" -> {
+                case AI_ANALYZE -> {
                     new Thread(() -> {
                         try {
-                            String messageContent = getTextFromMessage(selectedMessage);
-                            if (actionType.equals("AllAnalyze")) {
-                                messageContent = "";
-                                int i = 1;
-                                for (Message email : emailAnalyzeList) {
-                                    String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
-                                    messageContent += i + ".從: " + messageWithoutNewlines + ":";
-                                    messageContent += getTextFromMessage(email);
-                                    i++;
-                                }
+                            String responseBody = AIAnalyze.OpenAIAnalyze(getTextFromMessage(selectedMessage), 1);
+                            SwingUtilities.invokeLater(() -> showanaly("AI分析", responseBody));
+                        }catch (Exception e) {}
+                    }).start();
+                }
+                case AI_ANALYZE_GROUP -> {
+                    new Thread(() -> {
+                        try {
+                            String messageContent = "";
+                            int i = 1;
+                            for (Message email : emailAnalyzeList) {
+                                String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
+                                messageContent += i + ".從: " + messageWithoutNewlines + ":";
+                                messageContent += getTextFromMessage(email);
+                                i++;
                             }
-                            String responseBody = AIAnalyze.OpenAIAnalyze(messageContent, actionType.equals("AIAnalyze") ? 1 : 2);
-                            SwingUtilities.invokeLater(() -> showanaly(actionType, responseBody));
+                            String responseBody = AIAnalyze.OpenAIAnalyze(messageContent, 2);
+                            SwingUtilities.invokeLater(() -> showanaly("群組分析", responseBody));
+                        } catch (Exception e) {};
+                    }).start();
+                }
+//                case "AIAnalyze", "AllAnalyze" -> {
+//                    new Thread(() -> {
+//                        try {
+//                            String messageContent = getTextFromMessage(selectedMessage);
+//                            if (actionType.equals("AllAnalyze")) {
+//                                messageContent = "";
+//                                int i = 1;
+//                                for (Message email : emailAnalyzeList) {
+//                                    String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
+//                                    messageContent += i + ".從: " + messageWithoutNewlines + ":";
+//                                    messageContent += getTextFromMessage(email);
+//                                    i++;
+//                                }
+//                            }
+//                            String responseBody = AIAnalyze.OpenAIAnalyze(messageContent, actionType.equals("AIAnalyze") ? 1 : 2);
+//                            SwingUtilities.invokeLater(() -> showanaly(actionType, responseBody));
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }).start();
+//                    return;
+//                }
+                case REPLY -> {
+                    String to, subject;
+                    to = InternetAddress.toString(selectedMessage.getFrom());
+                    subject = "Re: "+selectedMessage.getSubject();
+                    showComposeDialog(to, subject, "", true);
+                }
+                case AI_REPLY -> {
+                    new Thread(() -> {
+                        try {
+                            bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage)));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }).start();
-                    return;
                 }
-
             }
-            String to;
-            if (actionType.equals("Reply")||actionType.equals("AIReply")) {
-                to = InternetAddress.toString(selectedMessage.getFrom());
-            } else {
-                to = "";
-            }
-            String subjectPrefix;
-            if (actionType.equals("Reply")||actionType.equals("AIReply")) {
-                subjectPrefix = "Re: ";
-            } else {
-                subjectPrefix = "Fwd: ";
-            }
-            String subject = subjectPrefix + selectedMessage.getSubject();
-            String body = getTextFromMessage(selectedMessage);
-            final String finalBody = body.replace("<html><body>", "").replace("</body></html>", "");
-            if(actionType.equals("AIReply")){
-                new Thread(() -> {
-                    try {
-                        String responseBody = OpenAIChat.sendOpenAIRequest(body);
-                        showComposeDialog(to, subject, responseBody);
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-
-            }else {showComposeDialog(to, subject, finalBody);
-            }
-        } catch (MessagingException | IOException ex) {
+//            String to;
+//            if (actionType.equals("Reply")||actionType.equals("AIReply")) {
+//                to = InternetAddress.toString(selectedMessage.getFrom());
+//            } else {
+//                to = "";
+//            }
+//            String subjectPrefix;
+//            if (actionType.equals("Reply")||actionType.equals("AIReply")) {
+//                subjectPrefix = "Re: ";
+//            } else {
+//                subjectPrefix = "Fwd: ";
+//            }
+//            String subject = subjectPrefix + selectedMessage.getSubject();
+//            String body = getTextFromMessage(selectedMessage);
+//            if(actionType.equals("AIReply")){
+//                new Thread(() -> {
+//                    try {
+//                        String responseBody = OpenAIChat.sendOpenAIRequest(body);
+//                        showComposeDialog(to, subject, responseBody);
+//
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }).start();
+//
+//            }else {showComposeDialog(to, subject, body);
+//            }
+        } catch (MessagingException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
     public static void showanaly(String title,String message) {// 創建 JDialog
         JDialog dialog = new JDialog();
         dialog.setTitle(title);
@@ -506,52 +542,38 @@ public class EmailClientGUI extends JFrame {
 
         dialog.setVisible(true); // 顯示對話框
     }
-    private void showComposeDialog(String to, String subject, String body) {
-        JDialog composeDialog = new JDialog(this, "Compose Email", true);
-        composeDialog.setLayout(new BorderLayout(5, 5));
-        composeDialog.getContentPane().setBackground(BACKGROUND_COLOR);
 
+    private void showComposeDialog(String to, String subject, String body, boolean isReply) {
+        JDialog composeDialog = new JDialog(this, "撰寫郵件", true);
+        composeDialog.setLayout(new BorderLayout(5, 5));
+        composeDialog.setSize(400, 300);
         Box fieldsPanel = Box.createVerticalBox();
-        fieldsPanel.setBackground(BACKGROUND_COLOR);
 
         JTextField toField = new JTextField(to);
-        toField.setFont(EMAIL_CONTENT_FONT);
         JTextField subjectField = new JTextField(subject);
-        subjectField.setFont(EMAIL_CONTENT_FONT);
-        JTextArea bodyArea = new JTextArea(10, 20);
         bodyArea.setText(body);
-        bodyArea.setFont(EMAIL_CONTENT_FONT);
         bodyArea.setLineWrap(true);
         bodyArea.setWrapStyleWord(true);
 
-        JLabel toLabel = new JLabel("To:");
-        toLabel.setFont(BUTTON_FONT);
+        JLabel toLabel = new JLabel("收件者:");
         fieldsPanel.add(toLabel);
         fieldsPanel.add(toField);
-        JLabel subjectLabel = new JLabel("Subject:");
-        subjectLabel.setFont(BUTTON_FONT);
+        JLabel subjectLabel = new JLabel("主旨:");
         fieldsPanel.add(subjectLabel);
         fieldsPanel.add(subjectField);
 
         JPanel bottomPanel = new JPanel();
-        bottomPanel.setBackground(ACTION_PANEL_COLOR);
 
-        JButton attachButton = new JButton("Attach Files");
-        attachButton.setFont(BUTTON_FONT);
-        attachButton.setBackground(BUTTON_COLOR);
+        JButton attachButton = new JButton("附件");
 
-        JButton sendButton = new JButton("Send");
-        sendButton.setFont(BUTTON_FONT);
-        sendButton.setBackground(BUTTON_COLOR);
+        JButton sendButton = new JButton("傳送");
 
-        JLabel attachedFilesLabel = new JLabel("No files attached");
-        attachedFilesLabel.setFont(BUTTON_FONT);
-
+        JLabel attachedFilesLabel = new JLabel("沒有附加檔案");
         List<File> attachedFiles = new ArrayList<>();
         attachButton.addActionListener(e -> {
             File[] files = AttachmentChooser.chooseAttachments();
             attachedFiles.addAll(Arrays.asList(files));
-            attachedFilesLabel.setText(attachedFiles.size() + " files attached");
+            attachedFilesLabel.setText(attachedFiles.size() + " 個檔案");
         });
 
         sendButton.addActionListener(e -> {
@@ -562,6 +584,7 @@ public class EmailClientGUI extends JFrame {
 
         bottomPanel.add(attachedFilesLabel);
         bottomPanel.add(attachButton);
+        if (isReply) bottomPanel.add(AIreplyButton);
         bottomPanel.add(sendButton);
 
         composeDialog.add(fieldsPanel, BorderLayout.NORTH);
@@ -591,7 +614,32 @@ public class EmailClientGUI extends JFrame {
         timer.start();
     }
 
+//    private void showGroupPane() {
+//        try {
+//            String tmp = "";
+//            for (Message email : emailAnalyzeList) {
+//                tmp = (((InternetAddress)(email.getFrom()[0])).getPersonal())+"  -  "+email.getSubject();
+//                groupListModel.addElement(tmp);
+//            }
+//        } catch (MessagingException e) {System.err.println("1");};
+//
+//
+//        if (isShowGroup) {
+//            System.out.println(333);
+//            splitPane2.setDividerLocation(300);
+//            isShowGroup = false;
+//        }else {
+//            System.out.println(4444);
+//            splitPane2.setDividerLocation(0.6);
+//            isShowGroup = true;
+//        }
+//        getContentPane().add(splitPane, BorderLayout.CENTER);
+//        //this.revalidate();
+//        //this.repaint();
+//    }
+
     public static void main(String[] args) {
+        FlatLightLaf.setup();
         SwingUtilities.invokeLater(() -> new EmailClientGUI());
     }
 }

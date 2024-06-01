@@ -67,7 +67,6 @@ public class EmailSessionManager {
         Message[] messages = emailFolder.search(searchTerm);
         List<Message> messageList = Arrays.asList(messages);
         Collections.reverse(messageList);
-        System.out.println(messageList);
         return messageList.toArray(new Message[0]);
     }
 
