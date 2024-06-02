@@ -24,7 +24,7 @@ public class OpenAIChat {
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
 
             String jsonMessages = "[" +
-                    "{\"role\": \"system\", \"content\": \"" + "You have to act for me to reply the email in Chinese as you are a Taiwanese student." + "\"}," +
+                    "{\"role\": \"system\", \"content\": \"" + "You have to act for me to reply the email in Chinese as you are a receiver" + "\"}," +
                     "{\"role\": \"user\", \"content\": \"" + messageWithoutNewlines + "\"}" +
                     "]";
 

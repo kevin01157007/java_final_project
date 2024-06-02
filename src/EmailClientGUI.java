@@ -367,16 +367,25 @@ public class EmailClientGUI extends JFrame {
             return (String) part.getContent();
         } else if (part.isMimeType("multipart/*")) {
             MimeMultipart mimeMultipart = (MimeMultipart) part.getContent();
-            String result = "";
+            String htmlResult = "";
+            String plainTextResult = "";
             for (int i = 0; i < mimeMultipart.getCount(); i++) {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-                downloadAttachments(bodyPart,"../java_final_project/downloads");
-                String partText = getTextFromPart(bodyPart);
-                if (partText != null && !partText.isEmpty()) {
-                    result += partText + "\n";
+                downloadAttachments(bodyPart, "../java_final_project/downloads");
+                if (bodyPart.isMimeType("text/html") && htmlResult.isEmpty()) {
+                    htmlResult = (String) bodyPart.getContent();
+                } else if (bodyPart.isMimeType("text/plain") && plainTextResult.isEmpty()) {
+                    plainTextResult = convertPlainTextToHtml((String) bodyPart.getContent());
+                } else if (bodyPart.getContent() instanceof MimeMultipart) {
+                    String recursiveResult = getTextFromPart(bodyPart);
+                    if (recursiveResult.contains("<html>") && htmlResult.isEmpty()) {
+                        htmlResult = recursiveResult;
+                    } else if (plainTextResult.isEmpty()) {
+                        plainTextResult = recursiveResult;
+                    }
                 }
             }
-            return result.trim();
+            return !htmlResult.isEmpty() ? htmlResult : plainTextResult; // 优先返回 HTML 内容
         }
         return "";
     }
