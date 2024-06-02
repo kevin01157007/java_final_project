@@ -55,7 +55,7 @@ public class EmailClientGUI extends JFrame {
 
 
     public EmailClientGUI() {
-        setTitle("Java Email Client");
+        setTitle("GPT analyze email");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initUI();
@@ -377,7 +377,7 @@ public class EmailClientGUI extends JFrame {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
                 downloadAttachments(bodyPart, "../java_final_project/downloads");
                 if (bodyPart.isMimeType("text/html") && htmlResult.isEmpty()) {
-                    htmlResult = (String) bodyPart.getContent();
+                    htmlResult = convertPlainTextToHtml((String) bodyPart.getContent());
                 } else if (bodyPart.isMimeType("text/plain") && plainTextResult.isEmpty()) {
                     plainTextResult = convertPlainTextToHtml((String) bodyPart.getContent());
                 } else if (bodyPart.getContent() instanceof MimeMultipart) {
@@ -518,7 +518,8 @@ public class EmailClientGUI extends JFrame {
                 }
                 case FORWARD -> {
                     try {
-                        String forwardMsg = "\n\n---Forwarded Message---\n\n"+getTextFromMessage(selectedMessage)+"\n\n---Forwarded Message---\n";
+                        final String finalBody = getTextFromMessage(selectedMessage).replace("<html><body>", "").replace("</body></html>", "");
+                        String forwardMsg = "\n\n---Forwarded Message---\n"+ finalBody +"---Forwarded Message---\n";
                         String fwdSubject = "Fwd: " + selectedMessage.getSubject();
                         showComposeDialog("", fwdSubject, forwardMsg, false);
                     } catch (Exception e) {}
