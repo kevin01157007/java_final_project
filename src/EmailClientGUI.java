@@ -383,7 +383,7 @@ public class EmailClientGUI extends JFrame {
 
     private void prepareEmailAction(ButtonAction action) {
         if (emailList.getSelectedIndex() == -1) {
-            JOptionPane.showMessageDialog(this, "No email selected.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "未選擇信件!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         try {
@@ -402,6 +402,9 @@ public class EmailClientGUI extends JFrame {
                 }
                 case DELETE_GROUP -> {
                     int[] selectedIndices = groupList.getSelectedIndices();
+                    if (selectedIndices.length == 0) {
+                        JOptionPane.showMessageDialog(this, "未選擇信件!", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;}
                     // 倒序刪除選中的項目，避免索引問題
                     for (int i = selectedIndices.length - 1; i >= 0; i--) {
                         // 從ArrayList中刪除
@@ -441,6 +444,10 @@ public class EmailClientGUI extends JFrame {
                 }
                 case AI_ANALYZE_GROUP -> {
                     new Thread(() -> {
+                        if (emailAnalyzeList.size() == 0) {
+                            JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                         try {
                             String messageContent = "";
                             int i = 1;
@@ -481,16 +488,27 @@ public class EmailClientGUI extends JFrame {
                     String to, subject;
                     to = InternetAddress.toString(selectedMessage.getFrom());
                     subject = "Re: "+selectedMessage.getSubject();
-                    showComposeDialog(to, subject, "", true);
+                    try {
+                        String repliedMsg = "\n\n---Replied Message---\n" + getTextFromMessage(selectedMessage);
+                        showComposeDialog(to, subject, repliedMsg, true);
+                    } catch (Exception e) {}
                 }
                 case AI_REPLY -> {
                     new Thread(() -> {
                         try {
-                            bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage)));
+                            String repliedMsg = "\n\n---Replied Message---\n"+getTextFromMessage(selectedMessage);
+                            bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage))+repliedMsg);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }).start();
+                }
+                case FORWARD -> {
+                    try {
+                        String forwardMsg = "\n\n---Forwarded Message---\n"+getTextFromMessage(selectedMessage)+"---Forwarded Message---\n";
+                        String fwdSubject = "Fwd: " + selectedMessage.getSubject();
+                        showComposeDialog("", fwdSubject, forwardMsg, false);
+                    } catch (Exception e) {}
                 }
             }
 //            String to;
