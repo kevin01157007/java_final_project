@@ -112,10 +112,7 @@ public class EmailClientGUI extends JFrame {
                     JOptionPane.showMessageDialog(null, "查無寄件者", "Search No Sender", JOptionPane.INFORMATION_MESSAGE);
                 }
                 messages = searchedMessage;
-                emailListModel.clear();
-                for (int i = messages.length-1; i >= 0; i--) {
-                    emailListModel.addElement((((InternetAddress)(messages[i].getFrom()[0])).getPersonal())+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
-                }
+                addEmailToList();
             }catch (MessagingException ex) {ex.printStackTrace();}
         });
         leftPanel.add(searchField, BorderLayout.NORTH);
@@ -286,11 +283,24 @@ public class EmailClientGUI extends JFrame {
             SearchTerm searchTerm = new ReceivedDateTerm(ComparisonTerm.GT, oneWeekAgo);
 
             messages = EmailSessionManager.getInstance().searchEmail(searchTerm);
-            emailListModel.clear();
-            for (int i = 0; i < messages.length; i++) {
-                emailListModel.addElement((((InternetAddress)(messages[i].getFrom()[0])).getPersonal())+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
-            }
+            addEmailToList();
 
+        } catch (MessagingException e) {
+            JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void addEmailToList() {
+        emailListModel.clear();
+        try {
+            for (int i = 0; i < messages.length; i++) {
+                String name = (((InternetAddress)(messages[i].getFrom()[0])).getPersonal());
+                if (name == null) {
+                    String adr = ((InternetAddress)(messages[i].getFrom()[0])).getAddress();
+                    name = adr.split("@")[0];
+                }
+                emailListModel.addElement(name+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
+            }
         } catch (MessagingException e) {
             JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -299,14 +309,7 @@ public class EmailClientGUI extends JFrame {
     private void refreshInbox(refreshMode refreshMode) {
         if (refreshMode == refreshMode.getMessageFromFolder) {refreshInbox();} //從server抓
         else if (refreshMode == refreshMode.getMessageFromOriginal) { //從message抓
-            emailListModel.clear();
-            try {
-                for (int i = 0; i < messages.length; i++) {
-                    emailListModel.addElement((((InternetAddress)(messages[i].getFrom()[0])).getPersonal())+" - "+messages[i].getSubject()+" - "+((InternetAddress)(messages[i].getFrom()[0])).getAddress());
-                }
-            } catch (MessagingException e) {
-                JOptionPane.showMessageDialog(this, "Failed to fetch emails: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            addEmailToList();
         }
     }
 
@@ -498,14 +501,14 @@ public class EmailClientGUI extends JFrame {
                     to = InternetAddress.toString(selectedMessage.getFrom());
                     subject = "Re: "+selectedMessage.getSubject();
                     try {
-                        String repliedMsg = "\n\n---Replied Message---\n" + getTextFromMessage(selectedMessage);
+                        String repliedMsg = "\n\n---Replied Message---\n\n" + getTextFromMessage(selectedMessage);
                         showComposeDialog(to, subject, repliedMsg, true);
                     } catch (Exception e) {}
                 }
                 case AI_REPLY -> {
                     new Thread(() -> {
                         try {
-                            String repliedMsg = "\n\n---Replied Message---\n"+getTextFromMessage(selectedMessage);
+                            String repliedMsg = "\n\n---Replied Message---\n\n"+getTextFromMessage(selectedMessage);
                             bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage))+repliedMsg);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -514,7 +517,7 @@ public class EmailClientGUI extends JFrame {
                 }
                 case FORWARD -> {
                     try {
-                        String forwardMsg = "\n\n---Forwarded Message---\n"+getTextFromMessage(selectedMessage)+"---Forwarded Message---\n";
+                        String forwardMsg = "\n\n---Forwarded Message---\n\n"+getTextFromMessage(selectedMessage)+"\n\n---Forwarded Message---\n";
                         String fwdSubject = "Fwd: " + selectedMessage.getSubject();
                         showComposeDialog("", fwdSubject, forwardMsg, false);
                     } catch (Exception e) {}
