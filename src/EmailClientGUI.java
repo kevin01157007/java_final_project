@@ -355,7 +355,7 @@ public class EmailClientGUI extends JFrame {
     }
 
     private String convertPlainTextToHtml(String text) {
-        String html = text.replace("\n", "<br>");
+        String html = text.replace("\r\n", "<br>").replace("\n", "<br>");
         return "<html><body>" + html + "</body></html>";
     }
 
@@ -517,7 +517,7 @@ public class EmailClientGUI extends JFrame {
                 }
                 case FORWARD -> {
                     try {
-                        final String finalBody = getTextFromMessage(selectedMessage).replace("<html><body>", "").replace("</body></html>", "");
+                        final String finalBody = getTextFromMessage(selectedMessage);
                         String forwardMsg = "\n\n---Forwarded Message---\n"+ finalBody +"---Forwarded Message---\n";
                         String fwdSubject = "Fwd: " + selectedMessage.getSubject();
                         showComposeDialog("", fwdSubject, forwardMsg, false);
@@ -608,7 +608,7 @@ public class EmailClientGUI extends JFrame {
         });
 
         sendButton.addActionListener(e -> {
-            EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText(),
+            EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText().replace("\r\n", "<br>").replace("\n", "<br>"),
                     attachedFiles.toArray(new File[0]));
             composeDialog.dispose();
         });
