@@ -198,12 +198,13 @@ public class EmailClientGUI extends JFrame {
         groupList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         JPanel groupButtonPanel = new JPanel();
         groupButtonPanel.setLayout(new BoxLayout(groupButtonPanel, BoxLayout.Y_AXIS));
+        JPanel groupButtonFlowPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         groupButtonPanel.add(addGroupButton);
         groupButtonPanel.add(deleteGroupButton);
         groupButtonPanel.add(aiAnalyzeGroupButton);
-        groupButtonPanel.setMinimumSize(new Dimension(40,40));
-        groupPanel.add(groupButtonPanel, BorderLayout.EAST);
-        groupPanel.add(new JScrollPane(groupList), BorderLayout.WEST);
+        groupButtonFlowPanel.add(groupButtonPanel);
+        groupPanel.add(groupButtonFlowPanel, BorderLayout.NORTH);
+        groupPanel.add(new JScrollPane(groupList), BorderLayout.CENTER);
         splitPane2.setLeftComponent(splitPane);
         splitPane2.setRightComponent(groupPanel);
         splitPane2.setDividerLocation(this.getWidth()-50);
