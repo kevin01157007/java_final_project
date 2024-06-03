@@ -495,8 +495,7 @@ public class EmailClientGUI extends JFrame {
                 }
                 case FORWARD -> {
                     try {
-                        final String finalBody = getTextFromMessage(selectedMessage).replace("<html><body>", "").replace("</body></html>", "");
-                        String forwardMsg = "\n\n---Forwarded Message---\n\n"+ finalBody;
+                        String forwardMsg = "\n\n---Forwarded Message---\n\n"+ getTextFromMessage(selectedMessage);
                         String fwdSubject = "Fwd: " + selectedMessage.getSubject();
                         showComposeDialog("", fwdSubject, forwardMsg, false);
                     } catch (Exception e) {}
