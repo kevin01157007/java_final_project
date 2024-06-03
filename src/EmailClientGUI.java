@@ -340,9 +340,13 @@ public class EmailClientGUI extends JFrame {
         return downloadedAttachments;
     }
 
-    private String convertPlainTextToHtml(String text) {
-        String html = text.replace("\r\n", "<br>").replace("\n", "<br>");
-        return "<html><body>" + html + "</body></html>";
+    private String dealBr(String text) {
+        if(text.contains("<!doctype html>")){
+            return text;
+        }
+        else{
+            return text.replace("\r\n", "<br>").replace("\n", "<br>");
+        }
     }
 
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
@@ -351,7 +355,7 @@ public class EmailClientGUI extends JFrame {
 
     private String getTextFromPart(Part part) throws MessagingException, IOException {
         if (part.isMimeType("text/plain")) {
-            return convertPlainTextToHtml((String) part.getContent());
+            return dealBr((String) part.getContent());
         } else if (part.isMimeType("text/html")) {
             return (String) part.getContent();
         } else if (part.isMimeType("multipart/*")) {
@@ -362,9 +366,9 @@ public class EmailClientGUI extends JFrame {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
                 downloadAttachments(bodyPart, "../java_final_project/downloads");
                 if (bodyPart.isMimeType("text/html") && htmlResult.isEmpty()) {
-                    htmlResult = convertPlainTextToHtml((String) bodyPart.getContent());
+                    htmlResult = dealBr((String) bodyPart.getContent());
                 } else if (bodyPart.isMimeType("text/plain") && plainTextResult.isEmpty()) {
-                    plainTextResult = convertPlainTextToHtml((String) bodyPart.getContent());
+                    plainTextResult = dealBr((String) bodyPart.getContent());
                 } else if (bodyPart.getContent() instanceof MimeMultipart) {
                     String recursiveResult = getTextFromPart(bodyPart);
                     if (recursiveResult.contains("<html>") && htmlResult.isEmpty()) {
@@ -565,8 +569,14 @@ public class EmailClientGUI extends JFrame {
         });
 
         sendButton.addActionListener(e -> {
-            EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText().replace("\r\n", "<br>").replace("\n", "<br>"),
-                    attachedFiles.toArray(new File[0]));
+            if(bodyArea.getText().contains("<!doctype html>")){
+                EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText(),
+                        attachedFiles.toArray(new File[0]));
+            }
+            else{
+                EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText().replace("\r\n", "<br>").replace("\n", "<br>"),
+                        attachedFiles.toArray(new File[0]));
+            }
             composeDialog.dispose();
         });
 
