@@ -70,14 +70,19 @@ public class EmailSessionManager {
         return messageList.toArray(new Message[0]);
     }
 
-    public Message[] searchUser(Message[] messages, String username) throws MessagingException {
+    public Message[] searchUser(Message[] messages, String keyword) throws MessagingException {
 
         ArrayList<Message> searchedMessages = new ArrayList<Message>();
         int idx = 0;
         for (int i = 0; i < messages.length; i++) {
             InternetAddress internetAddress = (InternetAddress) messages[i].getFrom()[0];
             String personal = internetAddress.getPersonal();
-            if (personal != null && personal.toLowerCase().contains(username.toLowerCase()))
+            if (personal != null && personal.toLowerCase().contains(keyword.toLowerCase()))
+                searchedMessages.add(messages[i]);
+        }
+        for (int i = 0; i < messages.length; i++) {
+            String subject = messages[i].getSubject();
+            if (subject != null && subject.toLowerCase().contains(keyword.toLowerCase()))
                 searchedMessages.add(messages[i]);
         }
         return searchedMessages.toArray(new Message[0]);
@@ -93,7 +98,17 @@ public class EmailSessionManager {
         }
 
         message.setFlag(Flags.Flag.DELETED, true);
-        emailFolder.expunge();
+    }
+
+    public void deleteMailFromGroup(Message[] messages, ArrayList<Message> deletedMessages) throws MessagingException {
+        for (int j = 0; j < deletedMessages.size(); j++) {
+            for (int i = 0; i < messages.length; i++) {
+                if (messages[i].getSubject().equals(deletedMessages.get(j).getSubject())){
+                    deleteEmail(messages[i]);
+                    //System.out.println("Deleted message from " + deletedMessages.get(j).getSubject());
+                }
+            }
+        }
     }
 
     public void close() throws MessagingException {
