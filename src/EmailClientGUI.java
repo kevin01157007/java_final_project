@@ -312,31 +312,24 @@ public class EmailClientGUI extends JFrame {
         }
     }
 
-    private Map<Integer, String> emailContentCache = new HashMap<>();
 
     private void emailListSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting() && emailList.getSelectedIndex() != -1) {
-            int selectedIndex = emailList.getSelectedIndex();
-            if (emailContentCache.containsKey(selectedIndex)) {
-                showHtmlContent(emailContentCache.get(selectedIndex));
-            } else {
-                new Thread(() -> {
-                    try {
-                        Message selectedMessage = messages[selectedIndex];
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                        String formattedDate = dateFormat.format(selectedMessage.getSentDate());
-                        String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
-                        content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
-                        content += "Date: " + formattedDate + "<br><br>";
-                        content += getTextFromMessage(selectedMessage);
-                        String finalContent = content;
-                        emailContentCache.put(selectedIndex, finalContent);
-                        SwingUtilities.invokeLater(() -> showHtmlContent(finalContent));
-                    } catch (MessagingException | IOException ex) {
-                        SwingUtilities.invokeLater(() -> showHtmlContent("Error reading email content: " + ex.getMessage()));
-                    }
-                }).start();
-            }
+            new Thread(() -> {
+                try {
+                    Message selectedMessage = messages[emailList.getSelectedIndex()];
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    String formattedDate = dateFormat.format(selectedMessage.getSentDate());
+                    String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
+                    content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
+                    content += "Date: " + formattedDate + "<br><br>";
+                    content += getTextFromMessage(selectedMessage);
+                    String finalContent = content;
+                    SwingUtilities.invokeLater(() -> showHtmlContent(finalContent));
+                } catch (MessagingException | IOException ex) {
+                    SwingUtilities.invokeLater(() -> showHtmlContent("Error reading email content: " + ex.getMessage()));
+                }
+            }).start();
         }
     }
 
