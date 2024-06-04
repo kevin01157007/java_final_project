@@ -3,8 +3,7 @@ package src;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,8 +18,6 @@ import javax.mail.internet.MimeMultipart;
 import java.awt.*;
 import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.ComparisonTerm;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
@@ -54,7 +51,7 @@ public class EmailClientGUI extends JFrame {
     private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     private JSplitPane splitPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
-
+    enum ButtonAction {REPLY, FORWARD, DELETE, AI_REPLY, ADD_GROUP, DELETE_GROUP, AI_ANALYZE_GROUP, AI_ANALYZE, DELETE_MAIL_FROM_GROUP, REPLY_ALL}
 
     public EmailClientGUI() {
         setTitle("GPT analyze email");
@@ -75,8 +72,16 @@ public class EmailClientGUI extends JFrame {
                 }
             }
         });
+
+        addWindowStateListener(new WindowStateListener() {
+            public void windowStateChanged(WindowEvent e) {
+                if(e.getNewState() == MAXIMIZED_BOTH) {
+                    splitPane.setResizeWeight(0.3);
+                    splitPane2.setResizeWeight(1);
+                }
+            }
+        });
     }
-    enum ButtonAction {REPLY, FORWARD, DELETE, AI_REPLY, ADD_GROUP, DELETE_GROUP, AI_ANALYZE_GROUP, AI_ANALYZE, DELETE_MAIL_FROM_GROUP, REPLY_ALL}
 
     private void initUI() {
         splitPane.setResizeWeight(0.5);
@@ -128,6 +133,7 @@ public class EmailClientGUI extends JFrame {
         splitPane.setLeftComponent(leftPanel);
         splitPane.setRightComponent(emailContent);
         splitPane.setDividerLocation(300);
+        splitPane.setMinimumSize(new Dimension(1,1));
 
         //按鈕
         ImageIcon replyAllIcon = new ImageIcon(getClass().getResource("/icons/reply_all.png"));
@@ -200,6 +206,7 @@ public class EmailClientGUI extends JFrame {
         splitPane2.setRightComponent(groupPanel);
         splitPane2.setDividerLocation(this.getWidth()-50);
         splitPane2.setOneTouchExpandable(true);
+        splitPane2.setMinimumSize(new Dimension(1,1));
 
         //將sp加進去畫面
         getContentPane().add(splitPane2, BorderLayout.CENTER);
