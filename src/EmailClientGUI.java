@@ -76,7 +76,7 @@ public class EmailClientGUI extends JFrame {
             }
         });
     }
-    enum ButtonAction {REPLY, FORWARD, DELETE, AI_REPLY, ADD_GROUP, DELETE_GROUP, AI_ANALYZE_GROUP, AI_ANALYZE, DELETE_MAIL_FROM_GROUP}
+    enum ButtonAction {REPLY, FORWARD, DELETE, AI_REPLY, ADD_GROUP, DELETE_GROUP, AI_ANALYZE_GROUP, AI_ANALYZE, DELETE_MAIL_FROM_GROUP, REPLY_ALL}
 
     private void initUI() {
         splitPane.setResizeWeight(0.5);
@@ -130,6 +130,7 @@ public class EmailClientGUI extends JFrame {
         splitPane.setDividerLocation(300);
 
         //按鈕
+        ImageIcon replyAllIcon = new ImageIcon(getClass().getResource("/icons/reply_all.png"));
         ImageIcon replyIcon = new ImageIcon(getClass().getResource("/icons/reply.png"));
         ImageIcon forwardIcon = new ImageIcon(getClass().getResource("/icons/forward.png"));
         ImageIcon deleteIcon = new ImageIcon(getClass().getResource("/icons/delete.png"));
@@ -138,6 +139,7 @@ public class EmailClientGUI extends JFrame {
         ImageIcon aiAnalyzeIcon = new ImageIcon(getClass().getResource("/icons/ai_analyze.png"));
         ImageIcon deleteGroupIcon = new ImageIcon(getClass().getResource("/icons/delete_group.png"));
         ImageIcon addGroupIcon = new ImageIcon(getClass().getResource("/icons/add_group.png"));
+        JButton replyAllButton = new JButton(replyAllIcon);
         JButton aiAnalyzeButton = new JButton(aiAnalyzeIcon);
         JButton replyButton = new JButton(replyIcon);
         JButton forwardButton = new JButton(forwardIcon);
@@ -148,6 +150,7 @@ public class EmailClientGUI extends JFrame {
         JButton deleteGroupButton = new JButton(deleteGroupIcon);
         JButton aiAnalyzeGroupButton = new JButton(aiAnalyzeIcon);
         JButton deleteEmailFromGroupButton = new JButton(deleteIcon);
+        replyAllButton.setToolTipText("回覆群組");
         replyButton.setToolTipText("回覆");
         forwardButton.setToolTipText("轉寄");
         deleteButton.setToolTipText("刪除");
@@ -157,11 +160,11 @@ public class EmailClientGUI extends JFrame {
         aiAnalyzeGroupButton.setToolTipText("AI群組分析");
         addGroupButton.setToolTipText("加入群組");
         deleteGroupButton.setToolTipText("從群組刪除");
-        deleteEmailFromGroupButton.setToolTipText("刪除群組中郵件");
+        deleteEmailFromGroupButton.setToolTipText("刪除群組");
         aiAnalyzeGroupButton.addActionListener(e -> prepareEmailAction(ButtonAction.AI_ANALYZE_GROUP));
         addGroupButton.addActionListener(e -> prepareEmailAction(ButtonAction.ADD_GROUP));
         deleteGroupButton.addActionListener(e -> prepareEmailAction(ButtonAction.DELETE_GROUP));
-        //showEmailButton.addActionListener(e -> prepareEmailAction(ButtonAction.SHOW_GROUP));
+        replyAllButton.addActionListener(e -> prepareEmailAction(ButtonAction.REPLY_ALL));
         aiAnalyzeButton.addActionListener(e -> prepareEmailAction(ButtonAction.AI_ANALYZE));
         AIreplyButton.addActionListener(e -> prepareEmailAction(ButtonAction.AI_REPLY));
         replyButton.addActionListener(e -> prepareEmailAction(ButtonAction.REPLY));
@@ -187,6 +190,7 @@ public class EmailClientGUI extends JFrame {
         JPanel groupButtonFlowPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         groupButtonPanel.add(addGroupButton);
         groupButtonPanel.add(deleteGroupButton);
+        groupButtonPanel.add(replyAllButton);
         groupButtonPanel.add(deleteEmailFromGroupButton);
         groupButtonPanel.add(aiAnalyzeGroupButton);
         groupButtonFlowPanel.add(groupButtonPanel);
@@ -495,28 +499,6 @@ public class EmailClientGUI extends JFrame {
                         }
                     }).start();
                 }
-//                case "AIAnalyze", "AllAnalyze" -> {
-//                    new Thread(() -> {
-//                        try {
-//                            String messageContent = getTextFromMessage(selectedMessage);
-//                            if (actionType.equals("AllAnalyze")) {
-//                                messageContent = "";
-//                                int i = 1;
-//                                for (Message email : emailAnalyzeList) {
-//                                    String messageWithoutNewlines = InternetAddress.toString(email.getFrom()).replace("\"", " ");
-//                                    messageContent += i + ".從: " + messageWithoutNewlines + ":";
-//                                    messageContent += getTextFromMessage(email);
-//                                    i++;
-//                                }
-//                            }
-//                            String responseBody = AIAnalyze.OpenAIAnalyze(messageContent, actionType.equals("AIAnalyze") ? 1 : 2);
-//                            SwingUtilities.invokeLater(() -> showanaly(actionType, responseBody));
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//                    }).start();
-//                    return;
-//                }
                 case REPLY -> {
                     String to, subject;
                     to = InternetAddress.toString(selectedMessage.getFrom());
@@ -548,10 +530,21 @@ public class EmailClientGUI extends JFrame {
                         JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                    EmailSessionManager.getInstance().deleteMailFromGroup(messages, emailAnalyzeList);
-                    refreshInbox();
+                    //EmailSessionManager.getInstance().deleteMailFromGroup(messages, emailAnalyzeList);
+                    //refreshInbox();
                     emailAnalyzeList.clear();
                     groupListModel.removeAllElements();
+                }
+                case REPLY_ALL -> {
+                    if (emailAnalyzeList.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    String to = InternetAddress.toString(emailAnalyzeList.get(0).getFrom());
+                    for (int i = 1; i < emailAnalyzeList.size(); i++) {
+                        to += ", "+InternetAddress.toString(emailAnalyzeList.get(i).getFrom());
+                    }
+                    showComposeDialog(to, "Re: ", "", false);
                 }
             }
         } catch (MessagingException ex) {
