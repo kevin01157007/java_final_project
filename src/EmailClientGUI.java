@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,7 @@ import java.awt.event.WindowEvent;
 import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
@@ -299,19 +301,30 @@ public class EmailClientGUI extends JFrame {
         }
     }
 
+    private Map<Integer, String> emailContentCache = new HashMap<>();
+
     private void emailListSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting() && emailList.getSelectedIndex() != -1) {
-            try {
-                Message selectedMessage = messages[emailList.getSelectedIndex()];
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                String formattedDate = dateFormat.format(selectedMessage.getSentDate());
-                String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
-                content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
-                content += "Date: " + formattedDate + "<br><br>";
-                content += getTextFromMessage(selectedMessage);
-                showHtmlContent(content);
-            } catch (MessagingException | IOException ex) {
-                showHtmlContent("Error reading email content: " + ex.getMessage());
+            int selectedIndex = emailList.getSelectedIndex();
+            if (emailContentCache.containsKey(selectedIndex)) {
+                showHtmlContent(emailContentCache.get(selectedIndex));
+            } else {
+                new Thread(() -> {
+                    try {
+                        Message selectedMessage = messages[selectedIndex];
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                        String formattedDate = dateFormat.format(selectedMessage.getSentDate());
+                        String content = "Subject: " + selectedMessage.getSubject() + "<br><br>";
+                        content += "From: " + InternetAddress.toString(selectedMessage.getFrom()) + "<br><br>";
+                        content += "Date: " + formattedDate + "<br><br>";
+                        content += getTextFromMessage(selectedMessage);
+                        String finalContent = content;
+                        emailContentCache.put(selectedIndex, finalContent);
+                        SwingUtilities.invokeLater(() -> showHtmlContent(finalContent));
+                    } catch (MessagingException | IOException ex) {
+                        SwingUtilities.invokeLater(() -> showHtmlContent("Error reading email content: " + ex.getMessage()));
+                    }
+                }).start();
             }
         }
     }
@@ -425,14 +438,41 @@ public class EmailClientGUI extends JFrame {
                     );
                 }
                 case AI_ANALYZE -> {
+                    JDialog dialog = new JDialog();
+                    dialog.setTitle("AI分析");
+                    dialog.setSize(400, 300);
+                    dialog.setLocationRelativeTo(null);
+                    JTextArea textArea = new JTextArea();
+                    textArea.setLineWrap(true);
+                    textArea.setWrapStyleWord(true);
+                    textArea.setEditable(false);
+                    JScrollPane scrollPane = new JScrollPane(textArea);
+                    dialog.add(scrollPane);
+                    dialog.setVisible(true);
+
                     new Thread(() -> {
                         try {
-                            String responseBody = AIAnalyze.OpenAIAnalyze(getTextFromMessage(selectedMessage), 1);
-                            SwingUtilities.invokeLater(() -> showanaly("AI分析", responseBody));
-                        }catch (Exception e) {}
+                            String messageContent = getTextFromMessage(selectedMessage);
+                            AIAnalyze.OpenAIAnalyze(messageContent, 1, response -> {
+                                SwingUtilities.invokeLater(() -> textArea.append(response));
+                            });
+                        } catch (Exception e) {
+                            SwingUtilities.invokeLater(() -> textArea.append("Error: " + e.getMessage() + "\n"));
+                        }
                     }).start();
                 }
                 case AI_ANALYZE_GROUP -> {
+                    JDialog dialog = new JDialog();
+                    dialog.setTitle("AI分析");
+                    dialog.setSize(400, 300);
+                    dialog.setLocationRelativeTo(null);
+                    JTextArea textArea = new JTextArea();
+                    textArea.setLineWrap(true);
+                    textArea.setWrapStyleWord(true);
+                    textArea.setEditable(false);
+                    JScrollPane scrollPane = new JScrollPane(textArea);
+                    dialog.add(scrollPane);
+                    dialog.setVisible(true);
                     new Thread(() -> {
                         if (emailAnalyzeList.size() == 0) {
                             JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -447,9 +487,12 @@ public class EmailClientGUI extends JFrame {
                                 messageContent += getTextFromMessage(email);
                                 i++;
                             }
-                            String responseBody = AIAnalyze.OpenAIAnalyze(messageContent, 2);
-                            SwingUtilities.invokeLater(() -> showanaly("群組分析", responseBody));
-                        } catch (Exception e) {};
+                            AIAnalyze.OpenAIAnalyze(messageContent, 1, response -> {
+                                SwingUtilities.invokeLater(() -> textArea.append(response));
+                            });
+                        } catch (Exception e) {
+                            SwingUtilities.invokeLater(() -> textArea.append("Error: " + e.getMessage() + "\n"));
+                        }
                     }).start();
                 }
 //                case "AIAnalyze", "AllAnalyze" -> {
@@ -486,7 +529,7 @@ public class EmailClientGUI extends JFrame {
                 case AI_REPLY -> {
                     new Thread(() -> {
                         try {
-                            String repliedMsg = "\n\n---Replied Message---\n\n"+getTextFromMessage(selectedMessage);
+                            String repliedMsg = "<br><br>---Replied Message---<br><br>"+getTextFromMessage(selectedMessage);
                             bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage))+repliedMsg);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -495,7 +538,7 @@ public class EmailClientGUI extends JFrame {
                 }
                 case FORWARD -> {
                     try {
-                        String forwardMsg = "\n\n---Forwarded Message---\n\n"+ getTextFromMessage(selectedMessage);
+                        String forwardMsg = "<br><br>---Forwarded Message---<br><br>"+ getTextFromMessage(selectedMessage);
                         String fwdSubject = "Fwd: " + selectedMessage.getSubject();
                         showComposeDialog("", fwdSubject, forwardMsg, false);
                     } catch (Exception e) {}
@@ -514,24 +557,6 @@ public class EmailClientGUI extends JFrame {
         } catch (MessagingException ex) {
             JOptionPane.showMessageDialog(this, "Error preparing email action.\n" + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    public static void showanaly(String title,String message) {// 創建 JDialog
-        JDialog dialog = new JDialog();
-        dialog.setTitle(title);
-        dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(null); // 使對話框居中顯
-        // 創建 JTextArea 並設置自動換行
-        JTextArea textArea = new JTextArea(message);
-        textArea.setLineWrap(true); // 自動換行
-        textArea.setWrapStyleWord(true); // 只在單詞邊界換行
-        textArea.setEditable(false); // 設置為不可編輯
-        // 創建 JScrollPane 並將 JTextArea 添加到其中
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        // 添加 JScrollPane 到對話框
-        dialog.add(scrollPane);
-
-        dialog.setVisible(true); // 顯示對話框
     }
 
     private void showComposeDialog(String to, String subject, String body, boolean isReply) {

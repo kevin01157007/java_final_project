@@ -13,24 +13,24 @@ import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.function.Consumer;
 
 public class AIAnalyze {
     private static final int MAX_RETRIES = 3;
 
-    public static String OpenAIAnalyze(String message, int i) throws Exception {
-        return OpenAIAnalyze(message, i, 0);
+    public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
+        OpenAIAnalyze(message, i, 0, responseHandler);
     }
 
-    private static String OpenAIAnalyze(String message, int i, int retryCount) throws Exception {
+    private static void OpenAIAnalyze(String message, int i, int retryCount, Consumer<String> responseHandler) throws Exception {
         try {
             String apiKey = "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"; // 替换为你的 API 密钥
             String prompt = null;
             if (i == 1) {
-                prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese.The fewer words the better.";
+                prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. The fewer words the better.";
             } else {
-                prompt = "You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize the content briefly, and finally report to me in Traditional Chinese.The fewer words the better.";
+                prompt = "You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize the content briefly, and finally report to me in Traditional Chinese. The fewer words the better.";
             }
-            // 使用 Jsoup 解析 HTML 并提取纯文本
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
 
@@ -39,20 +39,16 @@ public class AIAnalyze {
                     "{\"role\": \"user\", \"content\": \"" + messageWithoutNewlines + "\"}" +
                     "]";
 
-            // 使用 Apache HttpClient 库发送 HTTP POST 请求
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
-            httpPost.setHeader("Authorization", "Bearer " + apiKey); // 设置 Authorization 头部
+            httpPost.setHeader("Authorization", "Bearer " + apiKey);
             httpPost.setHeader("Content-Type", "application/json");
 
-            // 设置请求主体（这里假设邮件内容已经转换成 JSON 格式）
             StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}", "UTF-8");
             httpPost.setEntity(requestEntity);
-            // 执行请求并获取响应
             CloseableHttpResponse response = httpClient.execute(httpPost);
             HttpEntity responseEntity = response.getEntity();
 
-            // 解析响应
             if (responseEntity != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(responseEntity.getContent()));
                 String line;
@@ -61,30 +57,21 @@ public class AIAnalyze {
                     responseContent.append(line);
                 }
 
-                // 将响应内容转换成 JSON 对象
-                try {
-                    JSONObject jsonResponse = new JSONObject(responseContent.toString());
-                    JSONArray choicesArray = jsonResponse.getJSONArray("choices");
-                    JSONObject firstChoice = choicesArray.getJSONObject(0);
-                    String content = firstChoice.getJSONObject("message").getString("content");
-                    // 输出 content 字段的值
-                    return content;
-                } catch (JSONException e) {
-                    // 捕捉 JSON 解析异常并输出错误信息
-                    e.printStackTrace();
-                    if (retryCount < MAX_RETRIES) {
-                        return OpenAIAnalyze(message, i, retryCount + 1); // 重试
-                    } else {
-                        return "無法分析"; // 达到最大重试次数，返回默认消息
+                JSONObject jsonResponse = new JSONObject(responseContent.toString());
+                JSONArray choicesArray = jsonResponse.getJSONArray("choices");
+                for (int j = 0; j < choicesArray.length(); j++) {
+                    JSONObject choice = choicesArray.getJSONObject(j);
+                    String content = choice.getJSONObject("message").getString("content");
+                    for (char c : content.toCharArray()) {
+                        responseHandler.accept(String.valueOf(c));
+                        Thread.sleep(50); // 模擬逐字顯示的效果
                     }
                 }
+                httpClient.close();
             }
-
-            // 关闭 HTTP 客户端
-            httpClient.close();
         } catch (Exception e) {
             e.printStackTrace();
+            responseHandler.accept("Error: " + e.getMessage());
         }
-        return null;
     }
 }
