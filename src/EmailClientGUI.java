@@ -10,6 +10,8 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.mail.*;
@@ -49,7 +51,7 @@ public class EmailClientGUI extends JFrame {
     private JPanel groupPanel = new JPanel(new BorderLayout());
     private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     private JSplitPane splitPane2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-
+    private ExecutorService executorService = Executors.newFixedThreadPool(2);
     enum ButtonAction {REPLY, FORWARD, DELETE, AI_REPLY, ADD_GROUP, DELETE_GROUP, AI_ANALYZE_GROUP, AI_ANALYZE, DELETE_MAIL_FROM_GROUP, REPLY_ALL}
 
     public EmailClientGUI() {
@@ -354,15 +356,11 @@ public class EmailClientGUI extends JFrame {
             }
         }
         return downloadedAttachments;
+
     }
 
     private String dealBr(String text) {
-        if(text.contains("<!doctype html>")){
-            return text;
-        }
-        else{
             return text.replace("\r\n", "<br>").replace("\n", "<br>");
-        }
     }
 
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
@@ -380,19 +378,25 @@ public class EmailClientGUI extends JFrame {
             String plainTextResult = "";
             for (int i = 0; i < mimeMultipart.getCount(); i++) {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-                downloadAttachments(bodyPart, "../java_final_project/downloads");
                 if (bodyPart.isMimeType("text/html") && htmlResult.isEmpty()) {
                     htmlResult = (String) bodyPart.getContent();
                 } else if (bodyPart.isMimeType("text/plain") && plainTextResult.isEmpty()) {
                     plainTextResult = dealBr((String) bodyPart.getContent());
                 } else if (bodyPart.getContent() instanceof MimeMultipart) {
                     String recursiveResult = getTextFromPart(bodyPart);
-                    if (recursiveResult.contains("<html>") && htmlResult.isEmpty()) {
+                    if (recursiveResult.contains("<!DOCTYPE html") && htmlResult.isEmpty()) {
                         htmlResult = recursiveResult;
                     } else if (plainTextResult.isEmpty()) {
                         plainTextResult = recursiveResult;
                     }
                 }
+                executorService.submit(() -> {
+                    try {
+                        downloadAttachments(bodyPart, "../java_final_project/downloads");
+                    } catch (IOException | MessagingException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
             return !htmlResult.isEmpty() ? htmlResult : plainTextResult; // 优先返回 HTML 内容
         }
@@ -590,12 +594,12 @@ public class EmailClientGUI extends JFrame {
         });
 
         sendButton.addActionListener(e -> {
-            if(bodyArea.getText().contains("<!doctype html>")){
+            if(bodyArea.getText().contains("<!DOCTYPE html")){
                 EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText(),
                         attachedFiles.toArray(new File[0]));
             }
             else{
-                EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText().replace("\r\n", "<br>").replace("\n", "<br>"),
+                EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), dealBr(bodyArea.getText()),
                         attachedFiles.toArray(new File[0]));
             }
             composeDialog.dispose();
