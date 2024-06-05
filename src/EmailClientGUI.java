@@ -383,7 +383,7 @@ public class EmailClientGUI extends JFrame {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
                 downloadAttachments(bodyPart, "../java_final_project/downloads");
                 if (bodyPart.isMimeType("text/html") && htmlResult.isEmpty()) {
-                    htmlResult = dealBr((String) bodyPart.getContent());
+                    htmlResult = (String) bodyPart.getContent();
                 } else if (bodyPart.isMimeType("text/plain") && plainTextResult.isEmpty()) {
                     plainTextResult = dealBr((String) bodyPart.getContent());
                 } else if (bodyPart.getContent() instanceof MimeMultipart) {
