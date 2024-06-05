@@ -22,7 +22,6 @@ import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
@@ -30,7 +29,7 @@ import javafx.application.Platform;
 
 import javax.mail.internet.*;
 import java.text.SimpleDateFormat;
-
+import com.github.mouse0w0.darculafx.DarculaFX;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class EmailClientGUI extends JFrame {
@@ -412,7 +411,12 @@ public class EmailClientGUI extends JFrame {
                     try {
                         if (!emailAnalyzeList.contains(selectedMessage)) {
                             emailAnalyzeList.add(selectedMessage);
-                            groupListModel.addElement((((InternetAddress) (selectedMessage.getFrom()[0])).getPersonal()) + "  -  " + selectedMessage.getSubject());
+                            String name = (((InternetAddress) (selectedMessage.getFrom()[0])).getPersonal());
+                            if (name == null) {
+                                String adr = ((InternetAddress)(selectedMessage.getFrom()[0])).getAddress();
+                                name = adr.split("@")[0];
+                            }
+                            groupListModel.addElement(name + "  -  " + selectedMessage.getSubject());
                             JOptionPane.showMessageDialog(this, "郵件已加入分析列表。");
                         } else {
                             JOptionPane.showMessageDialog(this, "這封郵件已被加過了!");
@@ -504,15 +508,15 @@ public class EmailClientGUI extends JFrame {
                     to = InternetAddress.toString(selectedMessage.getFrom());
                     subject = "Re: "+selectedMessage.getSubject();
                     try {
-                        String repliedMsg = "\n\n---Replied Message---\n\n" + getTextFromMessage(selectedMessage);
-                        showComposeDialog(to, subject, repliedMsg, true);
+                        //String repliedMsg = "\n\n---Replied Message---\n\n" + getTextFromMessage(selectedMessage);
+                        showComposeDialog(to, subject, "", true);
                     } catch (Exception e) {}
                 }
                 case AI_REPLY -> {
                     new Thread(() -> {
                         try {
                             String repliedMsg = "<br><br>---Replied Message---<br><br>"+getTextFromMessage(selectedMessage);
-                            bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage))+repliedMsg);
+                            bodyArea.setText(OpenAIChat.sendOpenAIRequest(getTextFromMessage(selectedMessage)));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
