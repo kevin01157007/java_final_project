@@ -594,7 +594,7 @@ public class EmailClientGUI extends JFrame {
         });
 
         sendButton.addActionListener(e -> {
-            if(bodyArea.getText().contains("<!DOCTYPE html")){
+            if(bodyArea.getText().toLowerCase().contains("<!doctype html")){
                 EmailSender.sendEmailWithAttachment(toField.getText(), subjectField.getText(), bodyArea.getText(),
                         attachedFiles.toArray(new File[0]));
             }
