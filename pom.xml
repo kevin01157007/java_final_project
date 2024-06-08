@@ -18,10 +18,6 @@
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
-                <repository>
-            <id>gluon-releases</id>
-            <url>https://nexus.gluonhq.com/nexus/content/repositories/releases/</url>
-        </repository>
     </repositories>
     
     <dependencies>
@@ -159,7 +155,7 @@
         <sourceDirectory>src/main/java</sourceDirectory>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>src/main/resource</directory>
             </resource>
         </resources>
         <outputDirectory>bin</outputDirectory>
@@ -185,7 +181,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.example.EmailClientGUI</mainClass> <!-- 根據你的主類修改 -->
+                    <mainClass>EmailClientGUI</mainClass> <!-- 根據你的主類修改 -->
                 </configuration>
             </plugin>
         </plugins>
