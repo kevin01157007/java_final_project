@@ -42,7 +42,7 @@ public class OpenAIChat {
 
             // 解析响应
             if (responseEntity != null) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(responseEntity.getContent()));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(responseEntity.getContent(), StandardCharsets.UTF_8));
                 String line;
                 StringBuilder responseContent = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
