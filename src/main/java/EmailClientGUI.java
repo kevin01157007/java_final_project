@@ -1,35 +1,28 @@
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMultipart;
 import java.awt.*;
 import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.ComparisonTerm;
 import javax.mail.search.SearchTerm ;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.web.WebView;
 import javafx.application.Platform;
-
 import javax.mail.internet.*;
 import java.text.SimpleDateFormat;
-import com.github.mouse0w0.darculafx.DarculaFX;
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class EmailClientGUI extends JFrame {
@@ -219,13 +212,11 @@ public class EmailClientGUI extends JFrame {
         JLabel emailLabel = new JLabel("電子信箱:");
         panel.add(emailLabel);
         panel.add(usernameField);
-
         JLabel passwordLabel = new JLabel("應用程式密碼:");
         panel.add(passwordLabel);
         panel.add(passwordField);
-
         try {
-            File file = new File("../java_final_project/credentials.txt");
+            File file = new File("credentials.txt");
             Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -390,7 +381,7 @@ public class EmailClientGUI extends JFrame {
                 }
                 executorService.submit(() -> {
                     try {
-                        downloadAttachments(bodyPart, "../java_final_project/downloads");
+                        downloadAttachments(bodyPart, "../downloads");
                     } catch (IOException | MessagingException e) {
                         e.printStackTrace();
                     }
