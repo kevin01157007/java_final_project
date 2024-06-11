@@ -14,17 +14,13 @@ import java.util.function.Consumer;
 
 public class AIAnalyze {
     public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
-        OpenAIAnalyze(message, i, 0, responseHandler);
-    }
-
-    private static void OpenAIAnalyze(String message, int i, int retryCount, Consumer<String> responseHandler) throws Exception {
         try {
             String apiKey = "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";
             String prompt = null;
             if (i == 1) {
                 prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. The fewer words the better.";
             } else {
-                prompt = "You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize the content briefly, and finally report to me in Traditional Chinese. The fewer words the better.";
+                prompt = "You are now my personal assistant. You need to help me analyze who sent these messages to whom, summarize these email briefly, and finally report to me in Traditional Chinese. The fewer words the better.";
             }
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");

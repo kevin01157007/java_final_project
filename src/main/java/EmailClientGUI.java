@@ -475,7 +475,7 @@ public class EmailClientGUI extends JFrame {
                     dialog.add(scrollPane);
                     dialog.setVisible(true);
                     new Thread(() -> {
-                        if (emailAnalyzeList.size() == 0) {
+                        if (emailAnalyzeList.isEmpty()) {
                             JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
@@ -488,7 +488,7 @@ public class EmailClientGUI extends JFrame {
                                 messageContent += getTextFromMessage(email);
                                 i++;
                             }
-                            AIAnalyze.OpenAIAnalyze(messageContent, 1, response -> {
+                            AIAnalyze.OpenAIAnalyze(messageContent, 2, response -> {
                                 SwingUtilities.invokeLater(() -> textArea.append(response));
                             });
                         } catch (Exception e) {
