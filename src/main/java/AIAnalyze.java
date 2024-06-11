@@ -5,25 +5,21 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
 public class AIAnalyze {
-    private static final int MAX_RETRIES = 3;
-
     public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
         OpenAIAnalyze(message, i, 0, responseHandler);
     }
 
     private static void OpenAIAnalyze(String message, int i, int retryCount, Consumer<String> responseHandler) throws Exception {
         try {
-            String apiKey = "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"; // 替换为你的 API 密钥
+            String apiKey = "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";
             String prompt = null;
             if (i == 1) {
                 prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. The fewer words the better.";
@@ -33,10 +29,9 @@ public class AIAnalyze {
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
 
-            String jsonMessages = "[" +
-                    "{\"role\": \"system\", \"content\": \"" + prompt + "\"}," +
-                    "{\"role\": \"user\", \"content\": \"" + messageWithoutNewlines + "\"}" +
-                    "]";
+            JSONArray jsonMessages = new JSONArray();
+            jsonMessages.put(new JSONObject().put("role", "system").put("content", prompt));
+            jsonMessages.put(new JSONObject().put("role", "user").put("content", messageWithoutNewlines));
 
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
@@ -63,7 +58,7 @@ public class AIAnalyze {
                     String content = choice.getJSONObject("message").getString("content");
                     for (char c : content.toCharArray()) {
                         responseHandler.accept(String.valueOf(c));
-                        Thread.sleep(50); // 模擬逐字顯示的效果
+                        Thread.sleep(50);
                     }
                 }
                 httpClient.close();
