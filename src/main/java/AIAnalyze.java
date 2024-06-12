@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 public class AIAnalyze {
     public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
         try {
-            String apiKey = "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";
+            String apiKey = "sk-Kopp9IyshjfozvME8XcAJneLwVmgixUIhediY9EX1NysAofh";
             String prompt = null;
             if (i == 1) {
                 prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. The fewer words the better.";
@@ -30,11 +30,11 @@ public class AIAnalyze {
             jsonMessages.put(new JSONObject().put("role", "user").put("content", messageWithoutNewlines));
 
             CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
+            HttpPost httpPost = new HttpPost("https://api.chatanywhere.tech/v1/chat/completions");
             httpPost.setHeader("Authorization", "Bearer " + apiKey);
             httpPost.setHeader("Content-Type", "application/json");
 
-            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}", "UTF-8");
+            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-3.5-turbo\"}", "UTF-8");
             httpPost.setEntity(requestEntity);
             CloseableHttpResponse response = httpClient.execute(httpPost);
             HttpEntity responseEntity = response.getEntity();

@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 public class OpenAIChat {
     public static String sendOpenAIRequest(String message) throws Exception {
         try {
-            String apiKey = "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"; // 替換為你的 API 密鑰
+            String apiKey = "sk-Kopp9IyshjfozvME8XcAJneLwVmgixUIhediY9EX1NysAofh"; // 替換為你的 API 密鑰
 
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
@@ -25,11 +25,11 @@ public class OpenAIChat {
             jsonMessages.put(new JSONObject().put("role", "user").put("content", messageWithoutNewlines));
 
             CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost("https://api.openai.com/v1/chat/completions");
+            HttpPost httpPost = new HttpPost("https://api.chatanywhere.tech/v1/chat/completions");
             httpPost.setHeader("Authorization", "Bearer " + apiKey); // 设置 Authorization 头部
             httpPost.setHeader("Content-Type", "application/json");
 
-            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-4-turbo\"}", "UTF-8");
+            StringEntity requestEntity = new StringEntity("{\"messages\": " + jsonMessages + ", \"model\": \"gpt-3.5-turbo\"}", "UTF-8");
             httpPost.setEntity(requestEntity);
 
             CloseableHttpResponse response = httpClient.execute(httpPost);
