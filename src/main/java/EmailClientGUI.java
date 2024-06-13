@@ -373,7 +373,7 @@ public class EmailClientGUI extends JFrame {
                     plainTextResult = dealBr((String) bodyPart.getContent());
                 } else if (bodyPart.getContent() instanceof MimeMultipart) {
                     String recursiveResult = getTextFromPart(bodyPart);
-                    if (recursiveResult.contains("<!DOCTYPE html") && htmlResult.isEmpty()) {
+                    if (recursiveResult.toLowerCase().contains("<!doctype html") && htmlResult.isEmpty()) {
                         htmlResult = recursiveResult;
                     } else if (plainTextResult.isEmpty()) {
                         plainTextResult = recursiveResult;
