@@ -70,8 +70,13 @@ public class EmailSessionManager {
         System.out.println(messageList);
         return messageList.toArray(new Message[0]);
     }
+<<<<<<< Updated upstream:src/EmailSessionManager.java
 
     public Message[] searchUser(Message[] messages, String username) throws MessagingException {
+=======
+    //EmailManager
+    public Message[] searchUser(Message[] messages, String keyword) throws MessagingException {
+>>>>>>> Stashed changes:src/main/java/EmailSessionManager.java
 
         ArrayList<Message> searchedMessages = new ArrayList<Message>();
         int idx = 0;
@@ -83,7 +88,7 @@ public class EmailSessionManager {
         }
         return searchedMessages.toArray(new Message[0]);
     }
-
+    //EmailManager
     public void deleteEmail(Message message) throws MessagingException {
         if (emailFolder == null || !emailFolder.isOpen()) {
             emailFolder = store.getFolder("INBOX");
@@ -92,7 +97,6 @@ public class EmailSessionManager {
             emailFolder.close(false);
             emailFolder.open(Folder.READ_WRITE);
         }
-
         message.setFlag(Flags.Flag.DELETED, true);
         emailFolder.expunge();
     }

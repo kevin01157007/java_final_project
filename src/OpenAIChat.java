@@ -17,7 +17,11 @@ import java.nio.charset.StandardCharsets;
 public class OpenAIChat {
     public static String sendOpenAIRequest(String message) throws Exception {
         try {
+<<<<<<< Updated upstream:src/OpenAIChat.java
             String apiKey = "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"; // 替換為你的 API 密鑰
+=======
+            String apiKey = "sk-QLfeoQIlMDop4RZswJpW394G7ROdJAYOLXDnjRvEvnJlxMNF"; // 替換為你的 API 密鑰
+>>>>>>> Stashed changes:src/main/java/OpenAIChat.java
 
             // 使用 Jsoup 解析 HTML 并提取纯文本
             String plainTextMessage = Jsoup.parse(message).text();
