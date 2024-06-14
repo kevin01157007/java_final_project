@@ -385,7 +385,7 @@ public class EmailClientGUI extends JFrame {
                 }
                 executorService.submit(() -> {
                     try {
-                        downloadAttachments(bodyPart, "../java_final_project/downloads");
+                        downloadAttachments(bodyPart, "../downloads");
                     } catch (IOException | MessagingException e) {
                         e.printStackTrace();
                     }
