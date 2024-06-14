@@ -382,14 +382,15 @@ public class EmailClientGUI extends JFrame {
                 }
                 if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
                     hasAttachments = true;
-                }
-                executorService.submit(() -> {
+                    executorService.submit(() -> {
                     try {
                         downloadAttachments(bodyPart, "../downloads");
                     } catch (IOException | MessagingException e) {
                         e.printStackTrace();
                     }
                 });
+                }
+                
             }
         }
     
