@@ -17,6 +17,7 @@
 *.zip
 *.tar.gz
 *.rar
+.env
 # IntelliJ IDEA specific files
 .idea/
 *.iml
