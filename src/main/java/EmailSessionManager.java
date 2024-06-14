@@ -98,27 +98,6 @@ public class EmailSessionManager {
         message.setFlag(Flags.Flag.DELETED, true);
     }
 
-//    public void deleteMailFromGroup(Message[] messages, ArrayList<Message> deletedMessages) throws MessagingException {
-//        for (int j = 0; j < deletedMessages.size(); j++) {
-//            for (int i = 0; i < messages.length; i++) {
-//                if (messages[i].getSubject().equals(deletedMessages.get(j).getSubject())){
-//                    deleteEmail(messages[i]);
-//                    //System.out.println("Deleted message from " + deletedMessages.get(j).getSubject());
-//                }
-//            }
-//        }
-//    }
-//public void deleteMailFromGroup(Message[] messages, ArrayList<Message> deletedMessages) throws MessagingException {
-//    for (int j = 0; j < deletedMessages.size(); j++) {
-//        for (int i = 0; i < messages.length; i++) {
-//            if (messages[i].getSubject().equals(deletedMessages.get(j).getSubject())){
-//                deleteEmail(messages[i]);
-//                //System.out.println("Deleted message from " + deletedMessages.get(j).getSubject());
-//            }
-//        }
-//    }
-//}
-
     public void close() throws MessagingException {
         if (emailFolder != null) {
             emailFolder.close(false);

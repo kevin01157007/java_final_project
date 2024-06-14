@@ -463,6 +463,10 @@ public class EmailClientGUI extends JFrame {
                     }).start();
                 }
                 case AI_ANALYZE_GROUP -> {
+                    if (emailAnalyzeList.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
                     JDialog dialog = new JDialog();
                     dialog.setTitle("AI分析");
                     dialog.setSize(400, 300);
@@ -475,10 +479,6 @@ public class EmailClientGUI extends JFrame {
                     dialog.add(scrollPane);
                     dialog.setVisible(true);
                     new Thread(() -> {
-                        if (emailAnalyzeList.isEmpty()) {
-                            JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
                         try {
                             String messageContent = "";
                             int i = 1;
@@ -501,7 +501,6 @@ public class EmailClientGUI extends JFrame {
                     to = InternetAddress.toString(selectedMessage.getFrom());
                     subject = "Re: "+selectedMessage.getSubject();
                     try {
-                        //String repliedMsg = "\n\n---Replied Message---\n\n" + getTextFromMessage(selectedMessage);
                         showComposeDialog(to, subject, "", true);
                     } catch (Exception e) {}
                 }
@@ -527,8 +526,6 @@ public class EmailClientGUI extends JFrame {
                         JOptionPane.showMessageDialog(this, "信件群組是空的!", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                    //EmailSessionManager.getInstance().deleteMailFromGroup(messages, emailAnalyzeList);
-                    //refreshInbox();
                     emailAnalyzeList.clear();
                     groupListModel.removeAllElements();
                 }
@@ -625,30 +622,6 @@ public class EmailClientGUI extends JFrame {
         Timer timer = new Timer(1000, e -> checkForNewEmails());
         timer.start();
     }
-
-//    private void showGroupPane() {
-//        try {
-//            String tmp = "";
-//            for (Message email : emailAnalyzeList) {
-//                tmp = (((InternetAddress)(email.getFrom()[0])).getPersonal())+"  -  "+email.getSubject();
-//                groupListModel.addElement(tmp);
-//            }
-//        } catch (MessagingException e) {System.err.println("1");};
-//
-//
-//        if (isShowGroup) {
-//            System.out.println(333);
-//            splitPane2.setDividerLocation(300);
-//            isShowGroup = false;
-//        }else {
-//            System.out.println(4444);
-//            splitPane2.setDividerLocation(0.6);
-//            isShowGroup = true;
-//        }
-//        getContentPane().add(splitPane, BorderLayout.CENTER);
-//        //this.revalidate();
-//        //this.repaint();
-//    }
 
     public static void main(String[] args) {
         FlatLightLaf.setup();
