@@ -1,5 +1,7 @@
 # 使用說明
 ## 申請應用程式密碼(詳情看影片)
+需先申請二次驗證!
+
 ![image](https://github.com/kevin01157007/java_final_project/assets/152252977/0b882597-313b-4572-b48c-302b3a883a86)
 ## 把帳號密碼填入credentials.txt
 用意:只要輸入一次就好
