@@ -15,7 +15,9 @@ import java.nio.charset.StandardCharsets;
 public class OpenAIChat {
     public static String sendOpenAIRequest(String message) throws Exception {
         try {
-            Dotenv dotenv = Dotenv.load();
+            Dotenv dotenv = Dotenv.configure()
+                                     .directory("src/main/resource")
+                                     .load();
             String apiKey = dotenv.get("API_KEY1");
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");

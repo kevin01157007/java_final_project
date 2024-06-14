@@ -15,7 +15,9 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class AIAnalyze {
     public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
         try {
-            Dotenv dotenv = Dotenv.load();
+            Dotenv dotenv = Dotenv.configure()
+                                     .directory("src/main/resource")
+                                     .load();
             String apiKey = dotenv.get("API_KEY2");
             String prompt = null;
             if (i == 1) {
