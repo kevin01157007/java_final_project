@@ -16,7 +16,7 @@ public class AIAnalyze {
     public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
         try {
             Dotenv dotenv = Dotenv.load();
-            String apiKey = dotenv.get("API_KEY");
+            String apiKey = dotenv.get("API_KEY2");
             String prompt = null;
             if (i == 1) {
                 prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. The fewer words the better.";

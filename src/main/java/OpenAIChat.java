@@ -16,7 +16,7 @@ public class OpenAIChat {
     public static String sendOpenAIRequest(String message) throws Exception {
         try {
             Dotenv dotenv = Dotenv.load();
-            String apiKey = dotenv.get("API_KEY");
+            String apiKey = dotenv.get("API_KEY1");
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
             String prompt = "You have to act for me to reply the email in Chinese as you are a receiver";
