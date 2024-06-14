@@ -345,43 +345,39 @@ public class EmailClientGUI extends JFrame {
             }
         }
         return downloadedAttachments;
+
     }
-    
+
     private String dealBr(String text) {
-        return text.replace("\r\n", "<br>").replace("\n", "<br>");
+            return text.replace("\r\n", "<br>").replace("\n", "<br>");
     }
-    
+
     private String getTextFromMessage(Message message) throws MessagingException, IOException {
         return getTextFromPart(message);
     }
-    
+
     private String getTextFromPart(Part part) throws MessagingException, IOException {
-        boolean hasAttachments = false;
-        StringBuilder htmlResult = new StringBuilder();
-        StringBuilder plainTextResult = new StringBuilder();
-    
         if (part.isMimeType("text/plain")) {
             return dealBr((String) part.getContent());
         } else if (part.isMimeType("text/html")) {
             return (String) part.getContent();
         } else if (part.isMimeType("multipart/*")) {
             MimeMultipart mimeMultipart = (MimeMultipart) part.getContent();
+            String htmlResult = "";
+            String plainTextResult = "";
             for (int i = 0; i < mimeMultipart.getCount(); i++) {
                 BodyPart bodyPart = mimeMultipart.getBodyPart(i);
-                if (bodyPart.isMimeType("text/html")) {
-                    htmlResult.append((String) bodyPart.getContent());
-                } else if (bodyPart.isMimeType("text/plain")) {
-                    plainTextResult.append(dealBr((String) bodyPart.getContent()));
+                if (bodyPart.isMimeType("text/html") && htmlResult.isEmpty()) {
+                    htmlResult = (String) bodyPart.getContent();
+                } else if (bodyPart.isMimeType("text/plain") && plainTextResult.isEmpty()) {
+                    plainTextResult = dealBr((String) bodyPart.getContent());
                 } else if (bodyPart.getContent() instanceof MimeMultipart) {
                     String recursiveResult = getTextFromPart(bodyPart);
-                    if (recursiveResult.toLowerCase().contains("<!doctype html")) {
-                        htmlResult.append(recursiveResult);
-                    } else {
-                        plainTextResult.append(recursiveResult);
+                    if (recursiveResult.contains("<!DOCTYPE html") && htmlResult.isEmpty()) {
+                        htmlResult = recursiveResult;
+                    } else if (plainTextResult.isEmpty()) {
+                        plainTextResult = recursiveResult;
                     }
-                }
-                if (Part.ATTACHMENT.equalsIgnoreCase(bodyPart.getDisposition())) {
-                    hasAttachments = true;
                 }
                 executorService.submit(() -> {
                     try {
@@ -391,13 +387,9 @@ public class EmailClientGUI extends JFrame {
                     }
                 });
             }
+            return !htmlResult.isEmpty() ? htmlResult : plainTextResult; // 优先返回 HTML 内容
         }
-    
-        String result = !htmlResult.toString().isEmpty() ? htmlResult.toString() : plainTextResult.toString();
-        if (hasAttachments) {
-            result += "<br><br><b>此郵件包含附件。</b>";
-        }
-        return result;
+        return "";
     }
 
     private void prepareEmailAction(ButtonAction action) {

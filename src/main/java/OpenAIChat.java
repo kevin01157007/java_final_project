@@ -7,7 +7,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-import io.github.cdimascio.dotenv.Dotenv;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets;
 public class OpenAIChat {
     public static String sendOpenAIRequest(String message) throws Exception {
         try {
-            Dotenv dotenv = Dotenv.load();
-            String apiKey = dotenv.get("API_KEY1");
+            String apiKey = "sk-Kopp9IyshjfozvME8XcAJneLwVmgixUIhediY9EX1NysAofh"; // 替換為你的 API 密鑰
+
             String plainTextMessage = Jsoup.parse(message).text();
             String messageWithoutNewlines = plainTextMessage.replaceAll("\\n", "");
             String prompt = "You have to act for me to reply the email in Chinese as you are a receiver";

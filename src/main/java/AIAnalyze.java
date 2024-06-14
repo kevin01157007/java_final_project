@@ -11,12 +11,11 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
-import io.github.cdimascio.dotenv.Dotenv;
+
 public class AIAnalyze {
     public static void OpenAIAnalyze(String message, int i, Consumer<String> responseHandler) throws Exception {
         try {
-            Dotenv dotenv = Dotenv.load();
-            String apiKey = dotenv.get("API_KEY2");
+            String apiKey = "sk-Kopp9IyshjfozvME8XcAJneLwVmgixUIhediY9EX1NysAofh";
             String prompt = null;
             if (i == 1) {
                 prompt = "You are now my personal assistant. You need to help me analyze and summarize this message in the simplest terms possible with Traditional Chinese. The fewer words the better.";
