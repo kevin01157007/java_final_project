@@ -1,5 +1,6 @@
 # 使用說明
 ## 申請應用程式密碼(詳情看影片)
+https://youtu.be/jcLxyTiXyoc <br>
 需先申請二次驗證!
 
 <img width="1182" alt="msedge_qaNzwzm2SK" src="https://github.com/kevin01157007/java_final_project/assets/134579142/07bae4a8-d1c7-4607-ba11-5018030616ec">
